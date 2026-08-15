@@ -189,5 +189,4 @@ elif st.session_state["tela"] == "sistema":
     else:
         st.title(menu)
         st.write(f"Conteúdo da tela de **{menu}** em desenvolvimento.")
-
         
