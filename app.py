@@ -163,7 +163,7 @@ elif st.session_state["tela"] == "cadastro_inicial":
 elif st.session_state["tela"] == "sistema":
     sidebar_bg = get_image_base64(CAMINHO_SIDEBAR)
 
-    # Injeta a imagem cobrindo toda a barra lateral do topo ao fundo
+    # Estilização CSS para remover totalmente o fundo escuro da navegação
     st.markdown(
         f"""
         <style>
@@ -180,16 +180,16 @@ elif st.session_state["tela"] == "sistema":
                 background-color: transparent !important;
                 padding-top: 0rem !important;
             }}
-            /* Adiciona espaço no topo para não tapar o logo da imagem da sidebar */
+            /* Espaçamento superior mantido para não cobrir a logomarca */
             [data-testid="stSidebarUserContent"] {{
                 margin-top: 280px !important;
-                background-color: rgba(0, 0, 0, 0.4); /* Fundo sutil para destacar os botões */
+                background-color: transparent !important; /* Totalmente transparente */
                 padding: 1rem !important;
-                border-radius: 8px;
             }}
+            /* Sombra nas letras para garantir boa leitura sobre a imagem */
             [data-testid="stSidebar"] *, [data-testid="stSidebar"] p, [data-testid="stSidebar"] span {{
                 color: #FFFFFF !important;
-                text-shadow: 1px 1px 3px rgba(0,0,0,0.9);
+                text-shadow: 2px 2px 4px rgba(0,0,0,0.9);
             }}
 
             /* Estilo dos cartões de imóveis na área principal */
@@ -228,7 +228,7 @@ elif st.session_state["tela"] == "sistema":
         unsafe_allow_html=True,
     )
 
-    # Menu posicionado no centro/baixo da barra lateral
+    # Menu de Navegação na Barra Lateral
     st.sidebar.title("Navegação")
     menu = st.sidebar.radio(
         "Selecione a Tela:",
@@ -245,7 +245,7 @@ elif st.session_state["tela"] == "sistema":
         ],
     )
 
-    # Lógica do painel principal
+    # Lógica de navegação
     if menu == "Sair":
         st.session_state["tela"] = "login"
         st.rerun()
@@ -289,5 +289,4 @@ elif st.session_state["tela"] == "sistema":
     else:
         st.title(menu)
         st.write(f"Conteúdo da tela de **{menu}** em desenvolvimento.")
-
         
