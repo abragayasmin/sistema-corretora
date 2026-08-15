@@ -14,7 +14,7 @@ SIDEBAR_EXISTE = os.path.exists(CAMINHO_SIDEBAR)
 
 
 def get_image_base64(path):
-    """Converte uma imagem local em string Base64 para uso direto no CSS."""
+    """Converte uma imagem local em string Base64."""
     if os.path.exists(path):
         with open(path, "rb") as image_file:
             encoded_string = base64.b64encode(image_file.read()).decode()
@@ -161,38 +161,77 @@ elif st.session_state["tela"] == "cadastro_inicial":
 
 # --- 4. ÁREA PRINCIPAL DO SISTEMA ---
 elif st.session_state["tela"] == "sistema":
-    sidebar_bg = get_image_base64(CAMINHO_SIDEBAR)
-
-    # Injeta a imagem como plano de fundo completo na barra lateral
+    # CSS personalizado para fixar a barra lateral e formatar o conteúdo
     st.markdown(
-        f"""
+        """
         <style>
-            [data-testid="stSidebar"] {{
-                background-image: url("{sidebar_bg}");
-                background-size: cover;
-                background-position: center;
-                background-repeat: no-repeat;
-            }}
-            /* Torna os backgrounds internos transparentes para exibir a imagem */
-            [data-testid="stSidebar"] > div:first-child {{
-                background-color: transparent !important;
-            }}
-            [data-testid="stSidebarContent"] {{
-                background-color: transparent !important;
-                padding-top: 2rem !important;
-            }}
-            /* Ajusta contraste das fontes na sidebar */
-            [data-testid="stSidebar"] *, [data-testid="stSidebar"] p, [data-testid="stSidebar"] span {{
-                color: #FFFFFF !important;
-                text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
-            }}
+            /* Fixa a largura da barra lateral no tamanho ideal do print */
+            [data-testid="stSidebar"] {
+                min-width: 350px !important;
+                max-width: 350px !important;
+            }
+            
+            /* Remove margens superiores da barra lateral */
+            [data-testid="stSidebarHeader"] {
+                display: none !important;
+            }
+            [data-testid="stSidebarContent"] {
+                padding-top: 0rem !important;
+            }
+            [data-testid="stSidebarUserContent"] {
+                padding: 0rem !important;
+            }
+
+            /* Garante que a imagem do topo ocupe toda a largura sem bordas */
+            [data-testid="stSidebarUserContent"] div[data-testid="stImage"] {
+                margin: 0rem !important;
+                padding: 0rem !important;
+                width: 100% !important;
+            }
+            [data-testid="stSidebarUserContent"] img {
+                border-radius: 0px !important;
+                width: 100% !important;
+            }
+
+            /* Espaçamento das seções de texto e menu abaixo da imagem */
+            .sidebar-content {
+                padding: 1rem 1.2rem;
+            }
+
+            /* Cartões estilizados para os imóveis */
+            .card-imovel {
+                background-color: #1e222d;
+                border-left: 4px solid #00d26a;
+                padding: 10px;
+                border-radius: 5px;
+                margin-bottom: 12px;
+            }
+            .card-imovel h4 {
+                margin: 0 0 4px 0;
+                color: #ffffff;
+                font-size: 14px;
+            }
+            .card-imovel p {
+                margin: 2px 0;
+                color: #b0b8c4;
+                font-size: 12px;
+            }
+            .card-imovel .valor {
+                color: #00d26a;
+                font-weight: bold;
+                font-size: 13px;
+            }
         </style>
         """,
         unsafe_allow_html=True,
     )
 
-    st.sidebar.title("Corretora - Navegação")
+    # 1. Imagem no topo da barra lateral
+    if SIDEBAR_EXISTE:
+        st.sidebar.image(CAMINHO_SIDEBAR, use_container_width=True)
 
+    # 2. Navegação do Sistema
+    st.sidebar.title("Navegação")
     menu = st.sidebar.radio(
         "Selecione a Tela:",
         [
@@ -208,6 +247,35 @@ elif st.session_state["tela"] == "sistema":
         ],
     )
 
+    st.sidebar.divider()
+
+    # 3. Lista de Imóveis em Destaque abaixo do menu
+    st.sidebar.subheader("🏢 Imóveis em Destaque")
+
+    st.sidebar.markdown(
+        """
+        <div class="card-imovel">
+            <h4>Residencial Bosque Imperial</h4>
+            <p><i>Conforto, segurança e qualidade de vida.</i></p>
+            <p class="valor">Valores a partir de R$ 350 mil</p>
+        </div>
+        
+        <div class="card-imovel">
+            <h4>Condomínio Jardim das Palmeiras</h4>
+            <p><i>O lugar ideal para viver seus melhores momentos.</i></p>
+            <p class="valor">Valores a partir de R$ 220 mil</p>
+        </div>
+        
+        <div class="card-imovel">
+            <h4>Residencial Vista Verde</h4>
+            <p><i>Seu novo lar cercado de tranquilidade.</i></p>
+            <p class="valor">Valores a partir de R$ 185 mil</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # Lógica de navegação do painel principal
     if menu == "Sair":
         st.session_state["tela"] = "login"
         st.rerun()
