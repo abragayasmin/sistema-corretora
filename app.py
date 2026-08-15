@@ -161,76 +161,74 @@ elif st.session_state["tela"] == "cadastro_inicial":
 
 # --- 4. ÁREA PRINCIPAL DO SISTEMA ---
 elif st.session_state["tela"] == "sistema":
-    # CSS personalizado para fixar a barra lateral e formatar o conteúdo
+    sidebar_bg = get_image_base64(CAMINHO_SIDEBAR)
+
+    # Injeta a imagem cobrindo toda a barra lateral do topo ao fundo
     st.markdown(
-        """
+        f"""
         <style>
-            /* Fixa a largura da barra lateral no tamanho ideal do print */
-            [data-testid="stSidebar"] {
-                min-width: 350px !important;
-                max-width: 350px !important;
-            }
-            
-            /* Remove margens superiores da barra lateral */
-            [data-testid="stSidebarHeader"] {
-                display: none !important;
-            }
-            [data-testid="stSidebarContent"] {
+            [data-testid="stSidebar"] {{
+                background-image: url("{sidebar_bg}");
+                background-size: cover;
+                background-position: center;
+                background-repeat: no-repeat;
+            }}
+            [data-testid="stSidebar"] > div:first-child {{
+                background-color: transparent !important;
+            }}
+            [data-testid="stSidebarContent"] {{
+                background-color: transparent !important;
                 padding-top: 0rem !important;
-            }
-            [data-testid="stSidebarUserContent"] {
-                padding: 0rem !important;
-            }
+            }}
+            /* Adiciona espaço no topo para não tapar o logo da imagem da sidebar */
+            [data-testid="stSidebarUserContent"] {{
+                margin-top: 280px !important;
+                background-color: rgba(0, 0, 0, 0.4); /* Fundo sutil para destacar os botões */
+                padding: 1rem !important;
+                border-radius: 8px;
+            }}
+            [data-testid="stSidebar"] *, [data-testid="stSidebar"] p, [data-testid="stSidebar"] span {{
+                color: #FFFFFF !important;
+                text-shadow: 1px 1px 3px rgba(0,0,0,0.9);
+            }}
 
-            /* Garante que a imagem do topo ocupe toda a largura sem bordas */
-            [data-testid="stSidebarUserContent"] div[data-testid="stImage"] {
-                margin: 0rem !important;
-                padding: 0rem !important;
-                width: 100% !important;
-            }
-            [data-testid="stSidebarUserContent"] img {
-                border-radius: 0px !important;
-                width: 100% !important;
-            }
-
-            /* Espaçamento das seções de texto e menu abaixo da imagem */
-            .sidebar-content {
-                padding: 1rem 1.2rem;
-            }
-
-            /* Cartões estilizados para os imóveis */
-            .card-imovel {
+            /* Estilo dos cartões de imóveis na área principal */
+            .card-container {{
+                display: flex;
+                gap: 20px;
+                margin-top: 20px;
+                flex-wrap: wrap;
+            }}
+            .card-imovel-main {{
                 background-color: #1e222d;
-                border-left: 4px solid #00d26a;
-                padding: 10px;
-                border-radius: 5px;
-                margin-bottom: 12px;
-            }
-            .card-imovel h4 {
-                margin: 0 0 4px 0;
+                border-top: 4px solid #00d26a;
+                padding: 18px;
+                border-radius: 8px;
+                flex: 1;
+                min-width: 250px;
+            }}
+            .card-imovel-main h3 {{
+                margin: 0 0 8px 0;
                 color: #ffffff;
-                font-size: 14px;
-            }
-            .card-imovel p {
-                margin: 2px 0;
+                font-size: 16px;
+            }}
+            .card-imovel-main p {{
+                margin: 4px 0;
                 color: #b0b8c4;
-                font-size: 12px;
-            }
-            .card-imovel .valor {
+                font-size: 13px;
+            }}
+            .card-imovel-main .valor {{
                 color: #00d26a;
                 font-weight: bold;
-                font-size: 13px;
-            }
+                font-size: 15px;
+                margin-top: 10px;
+            }}
         </style>
         """,
         unsafe_allow_html=True,
     )
 
-    # 1. Imagem no topo da barra lateral
-    if SIDEBAR_EXISTE:
-        st.sidebar.image(CAMINHO_SIDEBAR, use_container_width=True)
-
-    # 2. Navegação do Sistema
+    # Menu posicionado no centro/baixo da barra lateral
     st.sidebar.title("Navegação")
     menu = st.sidebar.radio(
         "Selecione a Tela:",
@@ -247,41 +245,41 @@ elif st.session_state["tela"] == "sistema":
         ],
     )
 
-    st.sidebar.divider()
-
-    # 3. Lista de Imóveis em Destaque abaixo do menu
-    st.sidebar.subheader("🏢 Imóveis em Destaque")
-
-    st.sidebar.markdown(
-        """
-        <div class="card-imovel">
-            <h4>Residencial Bosque Imperial</h4>
-            <p><i>Conforto, segurança e qualidade de vida.</i></p>
-            <p class="valor">Valores a partir de R$ 350 mil</p>
-        </div>
-        
-        <div class="card-imovel">
-            <h4>Condomínio Jardim das Palmeiras</h4>
-            <p><i>O lugar ideal para viver seus melhores momentos.</i></p>
-            <p class="valor">Valores a partir de R$ 220 mil</p>
-        </div>
-        
-        <div class="card-imovel">
-            <h4>Residencial Vista Verde</h4>
-            <p><i>Seu novo lar cercado de tranquilidade.</i></p>
-            <p class="valor">Valores a partir de R$ 185 mil</p>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    # Lógica de navegação do painel principal
+    # Lógica do painel principal
     if menu == "Sair":
         st.session_state["tela"] = "login"
         st.rerun()
     elif menu == "Painel Geral":
         st.title("Painel Geral da Corretora")
         st.write("Bem-vindo ao sistema de gestão de ativos e clientes!")
+
+        st.write("")
+        st.subheader("🏢 Imóveis em Destaque")
+
+        # Exibe os imóveis logo abaixo do título do Painel Geral
+        st.markdown(
+            """
+            <div class="card-container">
+                <div class="card-imovel-main">
+                    <h3>Residencial Bosque Imperial</h3>
+                    <p><i>Conforto, segurança e qualidade de vida.</i></p>
+                    <p class="valor">Valores a partir de R$ 350 mil</p>
+                </div>
+                <div class="card-imovel-main">
+                    <h3>Condomínio Jardim das Palmeiras</h3>
+                    <p><i>O lugar ideal para viver seus melhores momentos.</i></p>
+                    <p class="valor">Valores a partir de R$ 220 mil</p>
+                </div>
+                <div class="card-imovel-main">
+                    <h3>Residencial Vista Verde</h3>
+                    <p><i>Seu novo lar cercado de tranquilidade.</i></p>
+                    <p class="valor">Valores a partir de R$ 185 mil</p>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
     elif menu == "Cadastrar Cliente":
         st.title("Cadastro de Clientes")
         nome_cli = st.text_input("Nome Completo")
@@ -291,4 +289,5 @@ elif st.session_state["tela"] == "sistema":
     else:
         st.title(menu)
         st.write(f"Conteúdo da tela de **{menu}** em desenvolvimento.")
+
         
