@@ -3,16 +3,17 @@ import re
 import streamlit as st
 
 # --- CONFIGURAÇÃO DE CAMINHOS ---
-# Define o nome exato do arquivo que você salvou na pasta
-NOME_ARQUIVO_LOGO = "logo_G&G.png" 
-
-# Garante que o Streamlit encontre a imagem no mesmo diretório do arquivo .py,
-# independente de onde o terminal foi aberto.
 DIRETORIO_ATUAL = os.path.dirname(os.path.abspath(__file__))
-CAMINHO_LOGO = os.path.join(DIRETORIO_ATUAL, NOME_ARQUIVO_LOGO)
+
+# Nomes exatos dos arquivos conforme o seu projeto
+CAMINHO_LOGO = os.path.join(DIRETORIO_ATUAL, "logo_G&G.png")
+CAMINHO_SIDEBAR = os.path.join(DIRETORIO_ATUAL, "Barra_lateral.png")
+
+# Checagem de existência dos arquivos
+LOGO_EXISTE = os.path.exists(CAMINHO_LOGO)
+SIDEBAR_EXISTE = os.path.exists(CAMINHO_SIDEBAR)
 
 
-# --- FUNÇÕES DE VALIDAÇÃO ---
 def validar_senha(senha: str) -> bool:
     """Valida se a senha tem no mínimo 6 caracteres, 1 letra maiúscula e 1 caractere especial."""
     if len(senha) < 6:
@@ -23,12 +24,12 @@ def validar_senha(senha: str) -> bool:
 
 
 # --- 1. CONFIGURAÇÃO INICIAL DA PÁGINA ---
-# Usa a logo atualizada na aba do navegador (favicon)
 st.set_page_config(
-    page_title="Sistema Corretora", page_icon=CAMINHO_LOGO, layout="wide"
+    page_title="Sistema Corretora",
+    page_icon=CAMINHO_LOGO if LOGO_EXISTE else "📈",
+    layout="wide",
 )
 
-# Inicializa a tela atual no estado da sessão
 if "tela" not in st.session_state:
     st.session_state["tela"] = "login"
 
@@ -48,10 +49,10 @@ if st.session_state["tela"] == "login":
     col1, col2, col3 = st.columns([1, 2, 1])
 
     with col2:
-        # Exibe a logo atualizada centralizada no topo do login
-        img_col1, img_col2, img_col3 = st.columns([1, 1, 1])
-        with img_col2:
-            st.image(CAMINHO_LOGO, use_container_width=True)
+        if LOGO_EXISTE:
+            img_col1, img_col2, img_col3 = st.columns([1, 1, 1])
+            with img_col2:
+                st.image(CAMINHO_LOGO, use_container_width=True)
 
         st.markdown(
             "<h2 style='text-align: center;'>Acesso ao Sistema</h2>",
@@ -99,10 +100,10 @@ elif st.session_state["tela"] == "cadastro_inicial":
     col1, col2, col3 = st.columns([1, 2, 1])
 
     with col2:
-        # Exibe a logo atualizada centralizada no topo do cadastro
-        img_col1, img_col2, img_col3 = st.columns([1, 1, 1])
-        with img_col2:
-            st.image(CAMINHO_LOGO, use_container_width=True)
+        if LOGO_EXISTE:
+            img_col1, img_col2, img_col3 = st.columns([1, 1, 1])
+            with img_col2:
+                st.image(CAMINHO_LOGO, use_container_width=True)
 
         st.markdown(
             "<h2 style='text-align: center;'>Cadastro de Novo Cliente</h2>",
@@ -152,8 +153,10 @@ elif st.session_state["tela"] == "cadastro_inicial":
 
 # --- 4. ÁREA PRINCIPAL DO SISTEMA ---
 elif st.session_state["tela"] == "sistema":
-    # Exibe a logo atualizada no topo da barra lateral
-    st.sidebar.image(CAMINHO_LOGO, use_container_width=True)
+    # Exibe a imagem promocional/banner exclusiva na barra lateral
+    if SIDEBAR_EXISTE:
+        st.sidebar.image(CAMINHO_SIDEBAR, use_container_width=True)
+
     st.sidebar.title("Corretora - Navegação")
 
     menu = st.sidebar.radio(
@@ -186,7 +189,5 @@ elif st.session_state["tela"] == "sistema":
     else:
         st.title(menu)
         st.write(f"Conteúdo da tela de **{menu}** em desenvolvimento.")
+
         
-
-
-
