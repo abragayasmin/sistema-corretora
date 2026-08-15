@@ -1,3 +1,4 @@
+import base64
 import os
 import re
 import streamlit as st
@@ -5,13 +6,20 @@ import streamlit as st
 # --- CONFIGURAÇÃO DE CAMINHOS ---
 DIRETORIO_ATUAL = os.path.dirname(os.path.abspath(__file__))
 
-# Nomes exatos dos arquivos conforme o seu projeto
 CAMINHO_LOGO = os.path.join(DIRETORIO_ATUAL, "logo_G&G.png")
 CAMINHO_SIDEBAR = os.path.join(DIRETORIO_ATUAL, "Barra_lateral.png")
 
-# Checagem de existência dos arquivos
 LOGO_EXISTE = os.path.exists(CAMINHO_LOGO)
 SIDEBAR_EXISTE = os.path.exists(CAMINHO_SIDEBAR)
+
+
+def get_image_base64(path):
+    """Converte uma imagem local em string Base64 para uso direto no CSS."""
+    if os.path.exists(path):
+        with open(path, "rb") as image_file:
+            encoded_string = base64.b64encode(image_file.read()).decode()
+            return f"data:image/png;base64,{encoded_string}"
+    return ""
 
 
 def validar_senha(senha: str) -> bool:
@@ -153,9 +161,35 @@ elif st.session_state["tela"] == "cadastro_inicial":
 
 # --- 4. ÁREA PRINCIPAL DO SISTEMA ---
 elif st.session_state["tela"] == "sistema":
-    # Exibe a imagem promocional/banner exclusiva na barra lateral
-    if SIDEBAR_EXISTE:
-        st.sidebar.image(CAMINHO_SIDEBAR, use_container_width=True)
+    sidebar_bg = get_image_base64(CAMINHO_SIDEBAR)
+
+    # Injeta a imagem como plano de fundo completo na barra lateral
+    st.markdown(
+        f"""
+        <style>
+            [data-testid="stSidebar"] {{
+                background-image: url("{sidebar_bg}");
+                background-size: cover;
+                background-position: center;
+                background-repeat: no-repeat;
+            }}
+            /* Torna os backgrounds internos transparentes para exibir a imagem */
+            [data-testid="stSidebar"] > div:first-child {{
+                background-color: transparent !important;
+            }}
+            [data-testid="stSidebarContent"] {{
+                background-color: transparent !important;
+                padding-top: 2rem !important;
+            }}
+            /* Ajusta contraste das fontes na sidebar */
+            [data-testid="stSidebar"] *, [data-testid="stSidebar"] p, [data-testid="stSidebar"] span {{
+                color: #FFFFFF !important;
+                text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+            }}
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
 
     st.sidebar.title("Corretora - Navegação")
 
