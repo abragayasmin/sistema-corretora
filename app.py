@@ -88,12 +88,12 @@ if "etapa_fluxo" not in st.session_state:
 st.set_page_config(
     page_title="G&G Imóveis",
     layout="wide",
-    initial_sidebar_state="expanded"
 )
 
 sidebar_bg_base64 = get_image_base64(CAMINHO_SIDEBAR)
+exibir_sidebar = st.session_state["etapa_fluxo"] not in ["login", "cadastro_inicial"]
 
-# Estilização CSS para forçar cores claras idênticas ao print de referência
+# Estilização CSS adaptável por tela
 st.markdown(
     f"""
     <style>
@@ -108,13 +108,13 @@ st.markdown(
             color: #0E1D2F !important;
         }}
         
-        /* Destaque para textos secundários / subtítulos */
         .subtitulo-cinza {{
             color: #556070 !important;
         }}
 
-        /* Barra Lateral Fixa com Imagem */
+        /* Esconde a barra lateral nas telas de Login e Cadastro */
         [data-testid="stSidebar"] {{
+            display: {"block" if exibir_sidebar else "none"} !important;
             background-image: url("{sidebar_bg_base64}");
             background-size: cover;
             background-position: center;
@@ -123,12 +123,12 @@ st.markdown(
             max-width: 280px !important;
         }}
         
-        /* Oculta botão de fechar sidebar */
+        /* Oculta botão de recolher sidebar */
         [data-testid="stSidebarCollapseButton"] {{
             display: none !important;
         }}
 
-        /* Cartões de Imóveis estilo Clean/White */
+        /* Cartões de Imóveis */
         div[data-testid="stColumn"] > div {{
             background-color: #FFFFFF;
             padding: 15px;
@@ -136,7 +136,7 @@ st.markdown(
             box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.05);
         }}
 
-        /* Botões padronizados em tom azul escuro com texto claro */
+        /* Botões padronizados */
         .stButton>button {{
             background-color: #0E1D2F !important;
             color: #FFFFFF !important;
@@ -153,8 +153,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-with st.sidebar:
-    st.empty()
+if exibir_sidebar:
+    with st.sidebar:
+        st.empty()
 
 # --- 2. TELA INICIAL: LOGIN ---
 if st.session_state["etapa_fluxo"] == "login":
