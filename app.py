@@ -88,17 +88,73 @@ if "etapa_fluxo" not in st.session_state:
 st.set_page_config(
     page_title="G&G Imóveis",
     layout="wide",
+    initial_sidebar_state="expanded"
 )
 
-# Oculta a barra lateral totalmente
+sidebar_bg_base64 = get_image_base64(CAMINHO_SIDEBAR)
+
+# Estilização CSS para forçar cores claras idênticas ao print de referência
 st.markdown(
-    """
+    f"""
     <style>
-        [data-testid="stSidebar"] {display: none;}
+        /* Fundo Principal Claro */
+        .stApp {{
+            background-color: #F8F9FA !important;
+            color: #0E1D2F !important;
+        }}
+        
+        /* Títulos e Textos Principais */
+        h1, h2, h3, h4, h5, h6, p, span, label {{
+            color: #0E1D2F !important;
+        }}
+        
+        /* Destaque para textos secundários / subtítulos */
+        .subtitulo-cinza {{
+            color: #556070 !important;
+        }}
+
+        /* Barra Lateral Fixa com Imagem */
+        [data-testid="stSidebar"] {{
+            background-image: url("{sidebar_bg_base64}");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            min-width: 280px !important;
+            max-width: 280px !important;
+        }}
+        
+        /* Oculta botão de fechar sidebar */
+        [data-testid="stSidebarCollapseButton"] {{
+            display: none !important;
+        }}
+
+        /* Cartões de Imóveis estilo Clean/White */
+        div[data-testid="stColumn"] > div {{
+            background-color: #FFFFFF;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.05);
+        }}
+
+        /* Botões padronizados em tom azul escuro com texto claro */
+        .stButton>button {{
+            background-color: #0E1D2F !important;
+            color: #FFFFFF !important;
+            border-radius: 8px !important;
+            border: none !important;
+            font-weight: 600 !important;
+        }}
+        
+        .stButton>button:hover {{
+            background-color: #1A2E47 !important;
+        }}
     </style>
     """,
     unsafe_allow_html=True,
 )
+
+with st.sidebar:
+    st.empty()
 
 # --- 2. TELA INICIAL: LOGIN ---
 if st.session_state["etapa_fluxo"] == "login":
@@ -170,13 +226,6 @@ elif st.session_state["etapa_fluxo"] == "cadastro_inicial":
             nome = st.text_input("Nome Completo", placeholder="Ex: João da Silva")
             cpf = st.text_input("CPF", placeholder="Apenas os 11 números do CPF")
             email = st.text_input("E-mail", placeholder="seuemail@exemplo.com")
-            telefone = st.text_input("Telefone / WhatsApp", placeholder="Ex: (82) 99999-9999")
-            
-            c1, c2 = st.columns(2)
-            with c1:
-                renda = st.number_input("Renda Mensal (R$)", min_value=0.0, step=500.0)
-            with c2:
-                data_nasc = st.date_input("Data de Nascimento")
 
             senha = st.text_input("Senha", type="password", placeholder="Crie uma senha")
             confirmar_senha = st.text_input("Confirmar Senha", type="password", placeholder="Repita a senha")
@@ -188,7 +237,7 @@ elif st.session_state["etapa_fluxo"] == "cadastro_inicial":
         if submit_cadastrar:
             cpf_limpo = re.sub(r"\D", "", cpf)
 
-            if not nome or not cpf_limpo or not email or not telefone or not senha:
+            if not nome or not cpf_limpo or not email or not senha:
                 st.error("Por favor, preencha todos os campos obrigatórios.")
             elif len(cpf_limpo) != 11:
                 st.error("O CPF deve conter exatamente 11 dígitos numéricos.")
@@ -203,9 +252,9 @@ elif st.session_state["etapa_fluxo"] == "cadastro_inicial":
                     "cpf": cpf_limpo,
                     "nome": nome,
                     "email": email,
-                    "telefone": telefone,
-                    "nascimento": str(data_nasc),
-                    "renda": renda,
+                    "telefone": "",
+                    "nascimento": "",
+                    "renda": 0.0,
                     "senha": senha,
                 }
                 st.success("Cadastro efetuado com sucesso! Faça seu login utilizando seu CPF.")
@@ -217,14 +266,14 @@ elif st.session_state["etapa_fluxo"] == "cadastro_inicial":
             st.session_state["etapa_fluxo"] = "login"
             st.rerun()
 
-# --- 4. PAINEL GERAL (OPORTUNIDADES E BOTÃO SIMULE SUA ENTRADA) ---
+# --- 4. PAINEL GERAL ---
 elif st.session_state["etapa_fluxo"] == "painel_geral":
     st.markdown("<h1>Sua casa a um passo de você</h1>", unsafe_allow_html=True)
-    st.markdown("<h3>Encontre o lar perfeito para criar as melhores memórias com quem você ama.</h3>", unsafe_allow_html=True)
-    st.write("Bem-vindo ao sistema de gestão imobiliária G&G Imóveis.")
+    st.markdown("<p class='subtitulo-cinza' style='font-size: 1.1rem; font-weight: 600;'>Encontre o lar perfeito para criar as melhores memórias com quem você ama.</p>", unsafe_allow_html=True)
+    st.markdown("<p class='subtitulo-cinza'>Bem-vindo ao sistema de gestão imobiliária G&G Imóveis.</p>", unsafe_allow_html=True)
 
     st.write("")
-    st.subheader("Oportunidades e Destaques da Semana")
+    st.markdown("<h3>Oportunidades e Destaques da Semana</h3>", unsafe_allow_html=True)
 
     col_img1, col_img2, col_img3 = st.columns(3)
 
@@ -232,9 +281,9 @@ elif st.session_state["etapa_fluxo"] == "painel_geral":
         img_bosque = carregar_imagem_padronizada(CAMINHO_BOSQUE)
         if img_bosque:
             st.image(img_bosque, use_container_width=True)
-        st.subheader("Residencial Bosque Imperial")
-        st.write("Conforto, segurança e área de lazer completa para a família.")
-        st.write("**Valores a partir de R$ 350 mil**")
+        st.markdown("<h4>Residencial Bosque Imperial</h4>", unsafe_allow_html=True)
+        st.markdown("<p class='subtitulo-cinza'><i>Conforto, segurança e área de lazer completa para a família.</i></p>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #C27803 !important; font-weight: bold;'>Valores a partir de R$ 350 mil</p>", unsafe_allow_html=True)
         if st.button("Simule sua entrada", key="btn_bosque", use_container_width=True):
             st.session_state["imovel_selecionado"] = "Residencial Bosque Imperial - R$ 350.000,00"
             st.session_state["etapa_fluxo"] = "passo1_cliente"
@@ -244,9 +293,9 @@ elif st.session_state["etapa_fluxo"] == "painel_geral":
         img_palmeiras = carregar_imagem_padronizada(CAMINHO_PALMEIRAS)
         if img_palmeiras:
             st.image(img_palmeiras, use_container_width=True)
-        st.subheader("Condomínio Jardim das Palmeiras")
-        st.write("O lugar ideal para viver seus melhores momentos ao ar livre.")
-        st.write("**Valores a partir de R$ 220 mil**")
+        st.markdown("<h4>Condomínio Jardim das Palmeiras</h4>", unsafe_allow_html=True)
+        st.markdown("<p class='subtitulo-cinza'><i>O lugar ideal para viver seus melhores momentos ao ar livre.</i></p>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #C27803 !important; font-weight: bold;'>Valores a partir de R$ 220 mil</p>", unsafe_allow_html=True)
         if st.button("Simule sua entrada", key="btn_palmeiras", use_container_width=True):
             st.session_state["imovel_selecionado"] = "Condomínio Jardim das Palmeiras - R$ 220.000,00"
             st.session_state["etapa_fluxo"] = "passo1_cliente"
@@ -256,18 +305,18 @@ elif st.session_state["etapa_fluxo"] == "painel_geral":
         img_vista = carregar_imagem_padronizada(CAMINHO_VISTA)
         if img_vista:
             st.image(img_vista, use_container_width=True)
-        st.subheader("Residencial Vista Verde")
-        st.write("Seu novo lar cercado de tranquilidade e natureza.")
-        st.write("**Valores a partir de R$ 185 mil**")
+        st.markdown("<h4>Residencial Vista Verde</h4>", unsafe_allow_html=True)
+        st.markdown("<p class='subtitulo-cinza'><i>Seu novo lar cercado de tranquilidade e natureza.</i></p>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #C27803 !important; font-weight: bold;'>Valores a partir de R$ 185 mil</p>", unsafe_allow_html=True)
         if st.button("Simule sua entrada", key="btn_vista", use_container_width=True):
             st.session_state["imovel_selecionado"] = "Residencial Vista Verde - R$ 185.000,00"
             st.session_state["etapa_fluxo"] = "passo1_cliente"
             st.rerun()
 
-# --- 5. PASSO 1: CADASTRO/COMPLETAÇÃO DE DADOS DO CLIENTE ---
+# --- 5. PASSO 1: COMPLETAR FICHA DO CLIENTE ---
 elif st.session_state["etapa_fluxo"] == "passo1_cliente":
     st.header("Passo 1 de 3: Cadastro e Ficha do Cliente")
-    st.write("Confirme ou complete suas informações cadastrais para prosseguir.")
+    st.write("Complete as informações essenciais do cliente para poder realizar a simulação:")
 
     cpf_atual = st.session_state.get("usuario_logado", "")
     dados_atuais = st.session_state["banco_clientes"].get(cpf_atual, {})
@@ -283,20 +332,20 @@ elif st.session_state["etapa_fluxo"] == "passo1_cliente":
         )
         
         email_cli = st.text_input("E-mail", value=dados_atuais.get("email", ""))
-        tel_cli = st.text_input("Telefone / WhatsApp", value=dados_atuais.get("telefone", ""))
+        tel_cli = st.text_input("Telefone / WhatsApp", value=dados_atuais.get("telefone", ""), placeholder="Ex: (82) 99999-9999")
         
         c1, c2 = st.columns(2)
         with c1:
             renda_cli = st.number_input("Renda Mensal (R$)", value=float(dados_atuais.get("renda", 0.0)), step=500.0)
         with c2:
-            nasc_cli = st.text_input("Data de Nascimento", value=dados_atuais.get("nascimento", ""))
+            nasc_cli = st.text_input("Data de Nascimento", value=dados_atuais.get("nascimento", ""), placeholder="Ex: 01/01/1990")
 
         btn_avancar = st.form_submit_button("Salvar e Avançar para o Cadastro de Corretor →", use_container_width=True)
 
     if btn_avancar:
         cpf_salvar = dados_atuais.get("cpf", cpf_atual)
-        if not cpf_salvar or not nome_cli or not email_cli:
-            st.error("Preencha ao menos Nome e E-mail.")
+        if not cpf_salvar or not nome_cli or not email_cli or not tel_cli or renda_cli <= 0:
+            st.error("Por favor, preencha todos os campos obrigatórios (incluindo WhatsApp e Renda Mensal).")
         else:
             st.session_state["banco_clientes"][cpf_salvar] = {
                 "cpf": cpf_salvar,
