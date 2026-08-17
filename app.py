@@ -58,9 +58,8 @@ def validar_senha(senha: str) -> bool:
     return tem_maiuscula and tem_especial
 
 
-# --- INICIALIZAÇÃO DO BANCO DE DADOS EM MEMÓRIA ---
+# --- BANCO DE DADOS EM MEMÓRIA ---
 if "banco_clientes" not in st.session_state:
-    # Estrutura base com um usuário padrão de testes
     st.session_state["banco_clientes"] = {
         "12345678900": {
             "nome": "Cliente Exemplo",
@@ -111,7 +110,7 @@ if st.session_state["tela"] == "login":
         st.write("")
 
         with st.form("form_login"):
-            cpf = st.text_input("CPF / Usuário", placeholder="Digite apenas os números do seu CPF")
+            cpf = st.text_input("CPF / Usuário", placeholder="Digite apenas números")
             senha = st.text_input("Senha", type="password", placeholder="Digite sua senha")
             st.write("")
 
@@ -182,13 +181,12 @@ elif st.session_state["tela"] == "cadastro_inicial":
             if not nome or not cpf_limpo or not email or not telefone or not senha:
                 st.error("Por favor, preencha todos os campos obrigatórios.")
             elif cpf_limpo in st.session_state["banco_clientes"]:
-                st.error(" Este CPF já está cadastrado na plataforma! Faça o login ou recupere sua conta.")
+                st.error("Este CPF já está cadastrado na plataforma!")
             elif not validar_senha(senha):
                 st.error("A senha não atende aos requisitos mínimos (6+ caracteres, 1 maiúscula e 1 caractere especial).")
             elif senha != confirmar_senha:
                 st.error("As senhas digitadas não coincidem.")
             else:
-                # Salva o cliente no banco em memória
                 st.session_state["banco_clientes"][cpf_limpo] = {
                     "nome": nome,
                     "email": email,
@@ -210,6 +208,7 @@ elif st.session_state["tela"] == "cadastro_inicial":
 elif st.session_state["tela"] == "sistema":
     sidebar_bg = get_image_base64(CAMINHO_SIDEBAR)
 
+    # Estilização CSS Corrigida: Força rótulos de formulário visíveis
     st.markdown(
         f"""
         <style>
@@ -220,6 +219,14 @@ elif st.session_state["tela"] == "sistema":
                 background-color: #f8fafc;
                 color: #0f172a;
             }}
+            
+            /* CORREÇÃO DAS LEGENDAS DOS FORMULÁRIOS */
+            label, [data-testid="stWidgetLabel"] p {{
+                color: #0f172a !important;
+                font-weight: 600 !important;
+                font-size: 15px !important;
+            }}
+            
             [data-testid="stSidebar"] {{
                 background-image: url("{sidebar_bg}");
                 background-size: cover;
@@ -365,7 +372,6 @@ elif st.session_state["tela"] == "sistema":
         st.title("Cadastro e Dados do Cliente")
         st.write("Consulte ou atualize a ficha cadastral do cliente no sistema.")
 
-        # Puxa os dados do usuário atual conectado para preenchimento automático
         cpf_atual = st.session_state.get("usuario_logado", "")
         dados_atuais = st.session_state["banco_clientes"].get(cpf_atual, {})
 
@@ -414,5 +420,4 @@ elif st.session_state["tela"] == "sistema":
             parcela_estimada = saldo_devedor / parcelas
             st.info(f"Valor a financiar: R$ {saldo_devedor:,.2f}")
             st.success(f"Valor estimado da parcela simples: R$ {parcela_estimada:,.2f}")
-
             
