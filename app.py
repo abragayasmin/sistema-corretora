@@ -41,7 +41,7 @@ def carregar_imagem_padronizada(caminho, largura=600, altura=400):
         
         w, h = img_proporcional.size
         left = (w - largura) / 2 if w > largura else 0
-        top = (h - altura) / 2 if h > altura else 0
+        top = (h - altura) / 2 if h > largura else 0
         right = (w + largura) / 2 if w > largura else w
         bottom = (h + altura) / 2 if h > altura else h
         
@@ -78,27 +78,103 @@ if "banco_corretores" not in st.session_state:
 if "usuario_logado" not in st.session_state:
     st.session_state["usuario_logado"] = None
 
+if "imovel_selecionado" not in st.session_state:
+    st.session_state["imovel_selecionado"] = None
+
 # --- 1. CONFIGURAÇÃO INICIAL DA PÁGINA ---
 st.set_page_config(
     page_title="G&G Imóveis",
     layout="wide",
 )
 
-if "tela" not in st.session_state:
-    st.session_state["tela"] = "login"
+if "etapa_fluxo" not in st.session_state:
+    st.session_state["etapa_fluxo"] = "login"
 
-if st.session_state["tela"] in ["login", "cadastro_inicial"]:
-    st.markdown(
-        """
-        <style>
-            [data-testid="stSidebar"] {display: none;}
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
+# Oculta a barra lateral totalmente em todas as telas
+st.markdown(
+    """
+    <style>
+        [data-testid="stSidebar"] {display: none;}
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+# --- ESTILIZAÇÃO GERAL ---
+st.markdown(
+    """
+    <style>
+        [data-testid="stHeader"] {
+            background: linear-gradient(90deg, #101c2c 0%, #1b2d42 100%) !important;
+        }
+        .stApp {
+            background-color: #f8fafc;
+            color: #0f172a;
+        }
+        label, [data-testid="stWidgetLabel"] p {
+            color: #0f172a !important;
+            font-weight: 600 !important;
+            font-size: 15px !important;
+        }
+        .card-imovel-main {
+            background-color: #ffffff;
+            border-radius: 0 0 12px 12px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e2e8f0;
+            border-top: none;
+            margin-top: -10px;
+        }
+        .card-imovel-main h3 {
+            margin: 0 0 8px 0;
+            color: #0f172a;
+            font-size: 18px;
+            font-weight: 700;
+        }
+        .card-imovel-main p {
+            margin: 6px 0;
+            color: #475569;
+            font-size: 14px;
+        }
+        .card-imovel-main .valor {
+            color: #d97706;
+            font-weight: bold;
+            font-size: 16px;
+            margin-top: 12px;
+            margin-bottom: 12px;
+        }
+        .titulo-principal {
+            color: #0f172a;
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 2px;
+        }
+        .subtitulo-comercial {
+            color: #0f172a;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        .texto-boasvindas {
+            color: #64748b;
+            font-size: 14px;
+        }
+        .bloco-resultado-escuro {
+            background-color: #262730;
+            color: #ffffff;
+            padding: 16px 20px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            font-size: 15px;
+            font-weight: 500;
+        }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 
 # --- 2. TELA INICIAL: LOGIN ---
-if st.session_state["tela"] == "login":
+if st.session_state["etapa_fluxo"] == "login":
     col1, col2, col3 = st.columns([1, 2, 1])
 
     with col2:
@@ -130,7 +206,7 @@ if st.session_state["tela"] == "login":
                 usuario = st.session_state["banco_clientes"][cpf_limpo]
                 if usuario["senha"] == senha:
                     st.session_state["usuario_logado"] = cpf_limpo
-                    st.session_state["tela"] = "sistema"
+                    st.session_state["etapa_fluxo"] = "painel_geral"
                     st.rerun()
                 else:
                     st.error("Senha incorreta!")
@@ -141,11 +217,11 @@ if st.session_state["tela"] == "login":
 
         st.write("Não possui conta?")
         if st.button("Me cadastrar", use_container_width=True):
-            st.session_state["tela"] = "cadastro_inicial"
+            st.session_state["etapa_fluxo"] = "cadastro_inicial"
             st.rerun()
 
 # --- 3. TELA DE CADASTRO INICIAL DO CLIENTE ---
-elif st.session_state["tela"] == "cadastro_inicial":
+elif st.session_state["etapa_fluxo"] == "cadastro_inicial":
     col1, col2, col3 = st.columns([1, 2, 1])
 
     with col2:
@@ -201,336 +277,247 @@ elif st.session_state["tela"] == "cadastro_inicial":
                     "senha": senha,
                 }
                 st.success("Cadastro efetuado com sucesso! Agora faça seu login.")
-                st.session_state["tela"] = "login"
+                st.session_state["etapa_fluxo"] = "login"
                 st.rerun()
 
         st.write("")
         if st.button("Voltar para o Login", use_container_width=True):
-            st.session_state["tela"] = "login"
+            st.session_state["etapa_fluxo"] = "login"
             st.rerun()
 
-# --- 4. ÁREA PRINCIPAL DO SISTEMA ---
-elif st.session_state["tela"] == "sistema":
-    sidebar_bg = get_image_base64(CAMINHO_SIDEBAR)
+# --- 4. PAINEL GERAL (OPORTUNIDADES E BOTÃO SIMULE SUA ENTRADA) ---
+elif st.session_state["etapa_fluxo"] == "painel_geral":
+    st.markdown("<h1 class='titulo-principal'>Sua casa a um passo de você</h1>", unsafe_allow_html=True)
+    st.markdown("<p class='subtitulo-comercial'>Encontre o lar perfeito para criar as melhores memórias com quem você ama.</p>", unsafe_allow_html=True)
+    st.markdown("<p class='texto-boasvindas'>Bem-vindo ao sistema de gestão imobiliária G&G Imóveis.</p>", unsafe_allow_html=True)
 
-    st.markdown(
-        f"""
-        <style>
-            [data-testid="stHeader"] {{
-                background: linear-gradient(90deg, #101c2c 0%, #1b2d42 100%) !important;
-            }}
-            .stApp {{
-                background-color: #f8fafc;
-                color: #0f172a;
-            }}
-            label, [data-testid="stWidgetLabel"] p {{
-                color: #0f172a !important;
-                font-weight: 600 !important;
-                font-size: 15px !important;
-            }}
-            [data-testid="stSidebar"] {{
-                background-image: url("{sidebar_bg}");
-                background-size: cover;
-                background-position: center;
-                background-repeat: no-repeat;
-            }}
-            [data-testid="stSidebar"] > div:first-child {{
-                background-color: transparent !important;
-            }}
-            [data-testid="stSidebarContent"] {{
-                background-color: transparent !important;
-                padding-top: 0rem !important;
-            }}
-            [data-testid="stSidebarUserContent"] {{
-                margin-top: 280px !important;
-                background-color: transparent !important;
-                padding: 1rem !important;
-            }}
-            [data-testid="stSidebar"] *, [data-testid="stSidebar"] p, [data-testid="stSidebar"] span {{
-                color: #FFFFFF !important;
-                text-shadow: 2px 2px 4px rgba(0,0,0,0.9);
-            }}
-            .card-imovel-main {{
-                background-color: #ffffff;
-                border-radius: 0 0 12px 12px;
-                padding: 20px;
-                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-                border: 1px solid #e2e8f0;
-                border-top: none;
-                margin-top: -10px;
-            }}
-            .card-imovel-main h3 {{
-                margin: 0 0 8px 0;
-                color: #0f172a;
-                font-size: 18px;
-                font-weight: 700;
-            }}
-            .card-imovel-main p {{
-                margin: 6px 0;
-                color: #475569;
-                font-size: 14px;
-            }}
-            .card-imovel-main .valor {{
-                color: #d97706;
-                font-weight: bold;
-                font-size: 16px;
-                margin-top: 12px;
-            }}
-            .titulo-principal {{
-                color: #0f172a;
-                font-size: 32px;
-                font-weight: 800;
-                margin-bottom: 2px;
-            }}
-            .subtitulo-comercial {{
-                color: #0f172a;
-                font-size: 18px;
-                font-weight: 600;
-                margin-bottom: 15px;
-            }}
-            .texto-boasvindas {{
-                color: #64748b;
-                font-size: 14px;
-            }}
-            .bloco-resultado-escuro {{
-                background-color: #262730;
-                color: #ffffff;
-                padding: 16px 20px;
-                border-radius: 8px;
-                margin-bottom: 12px;
-                font-size: 15px;
-                font-weight: 500;
-            }}
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
+    st.write("")
+    st.subheader("Oportunidades e Destaques da Semana")
 
-    st.sidebar.title("Navegação")
-    menu = st.sidebar.radio(
-        "Selecione a Tela:",
-        [
-            "Painel Geral",
-            "Cadastro de Cliente",
-            "Cadastro de Corretor",
-            "Simulação",
-            "Sair",
-        ],
-    )
+    col_img1, col_img2, col_img3 = st.columns(3)
 
-    if menu == "Sair":
-        st.session_state["usuario_logado"] = None
-        st.session_state["tela"] = "login"
-        st.rerun()
+    with col_img1:
+        img_bosque = carregar_imagem_padronizada(CAMINHO_BOSQUE)
+        if img_bosque:
+            st.image(img_bosque, use_container_width=True)
+        st.markdown(
+            """
+            <div class="card-imovel-main">
+                <h3>Residencial Bosque Imperial</h3>
+                <p><i>Conforto, segurança e área de lazer completa para a família.</i></p>
+                <p class="valor">Valores a partir de R$ 350 mil</p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        if st.button("Simule sua entrada", key="btn_bosque", use_container_width=True):
+            st.session_state["imovel_selecionado"] = "Residencial Bosque Imperial - R$ 350.000,00"
+            st.session_state["etapa_fluxo"] = "passo1_cliente"
+            st.rerun()
 
-    elif menu == "Painel Geral":
-        st.markdown("<h1 class='titulo-principal'>Sua casa a um passo de você</h1>", unsafe_allow_html=True)
-        st.markdown("<p class='subtitulo-comercial'>Encontre o lar perfeito para criar as melhores memórias com quem você ama.</p>", unsafe_allow_html=True)
-        st.markdown("<p class='texto-boasvindas'>Bem-vindo ao sistema de gestão imobiliária G&G Imóveis.</p>", unsafe_allow_html=True)
+    with col_img2:
+        img_palmeiras = carregar_imagem_padronizada(CAMINHO_PALMEIRAS)
+        if img_palmeiras:
+            st.image(img_palmeiras, use_container_width=True)
+        st.markdown(
+            """
+            <div class="card-imovel-main">
+                <h3>Condomínio Jardim das Palmeiras</h3>
+                <p><i>O lugar ideal para viver seus melhores momentos ao ar livre.</i></p>
+                <p class="valor">Valores a partir de R$ 220 mil</p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        if st.button("Simule sua entrada", key="btn_palmeiras", use_container_width=True):
+            st.session_state["imovel_selecionado"] = "Condomínio Jardim das Palmeiras - R$ 220.000,00"
+            st.session_state["etapa_fluxo"] = "passo1_cliente"
+            st.rerun()
 
-        st.write("")
-        st.subheader("Oportunidades e Destaques da Semana")
+    with col_img3:
+        img_vista = carregar_imagem_padronizada(CAMINHO_VISTA)
+        if img_vista:
+            st.image(img_vista, use_container_width=True)
+        st.markdown(
+            """
+            <div class="card-imovel-main">
+                <h3>Residencial Vista Verde</h3>
+                <p><i>Seu novo lar cercado de tranquilidade e natureza.</i></p>
+                <p class="valor">Valores a partir de R$ 185 mil</p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        if st.button("Simule sua entrada", key="btn_vista", use_container_width=True):
+            st.session_state["imovel_selecionado"] = "Residencial Vista Verde - R$ 185.000,00"
+            st.session_state["etapa_fluxo"] = "passo1_cliente"
+            st.rerun()
 
-        col_img1, col_img2, col_img3 = st.columns(3)
+# --- 5. PASSO 1: CADASTRO/COMPLETAÇÃO DE DADOS DO CLIENTE ---
+elif st.session_state["etapa_fluxo"] == "passo1_cliente":
+    st.markdown("## Passo 1 de 3: Cadastro e Ficha do Cliente")
+    st.write("Confirme ou complete suas informações cadastrais para prosseguir.")
 
-        with col_img1:
-            img_bosque = carregar_imagem_padronizada(CAMINHO_BOSQUE)
-            if img_bosque:
-                st.image(img_bosque, use_container_width=True)
-            st.markdown(
-                """
-                <div class="card-imovel-main">
-                    <h3>Residencial Bosque Imperial</h3>
-                    <p><i>Conforto, segurança e área de lazer completa para a família.</i></p>
-                    <p class="valor">Valores a partir de R$ 350 mil</p>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
+    cpf_atual = st.session_state.get("usuario_logado", "")
+    dados_atuais = st.session_state["banco_clientes"].get(cpf_atual, {})
 
-        with col_img2:
-            img_palmeiras = carregar_imagem_padronizada(CAMINHO_PALMEIRAS)
-            if img_palmeiras:
-                st.image(img_palmeiras, use_container_width=True)
-            st.markdown(
-                """
-                <div class="card-imovel-main">
-                    <h3>Condomínio Jardim das Palmeiras</h3>
-                    <p><i>O lugar ideal para viver seus melhores momentos ao ar livre.</i></p>
-                    <p class="valor">Valores a partir de R$ 220 mil</p>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-
-        with col_img3:
-            img_vista = carregar_imagem_padronizada(CAMINHO_VISTA)
-            if img_vista:
-                st.image(img_vista, use_container_width=True)
-            st.markdown(
-                """
-                <div class="card-imovel-main">
-                    <h3>Residencial Vista Verde</h3>
-                    <p><i>Seu novo lar cercado de tranquilidade e natureza.</i></p>
-                    <p class="valor">Valores a partir de R$ 185 mil</p>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-
-    elif menu == "Cadastro de Cliente":
-        st.title("Cadastro e Ficha do Cliente")
-        st.write("Preencha ou atualize os dados primordiais do cliente no sistema.")
-
-        cpf_atual = st.session_state.get("usuario_logado", "")
-        dados_atuais = st.session_state["banco_clientes"].get(cpf_atual, {})
-
-        with st.form("form_atualizar_cliente"):
-            nome_cli = st.text_input("Nome Completo", value=dados_atuais.get("nome", ""))
-            cpf_cli = st.text_input("CPF do Cliente", value=dados_atuais.get("cpf", cpf_atual), placeholder="Digite apenas os números")
-            email_cli = st.text_input("E-mail", value=dados_atuais.get("email", ""))
-            tel_cli = st.text_input("Telefone / WhatsApp", value=dados_atuais.get("telefone", ""))
-            
-            c1, c2 = st.columns(2)
-            with c1:
-                renda_cli = st.number_input("Renda Mensal (R$)", value=float(dados_atuais.get("renda", 0.0)), step=500.0)
-            with c2:
-                nasc_cli = st.text_input("Data de Nascimento", value=dados_atuais.get("nascimento", ""))
-
-            btn_salvar = st.form_submit_button("Salvar Ficha do Cliente")
-
-        if btn_salvar:
-            cpf_novo_limpo = re.sub(r"\D", "", cpf_cli)
-            
-            if not cpf_novo_limpo or not nome_cli or not email_cli:
-                st.error("Preencha ao menos Nome, CPF e E-mail.")
-            else:
-                st.session_state["banco_clientes"][cpf_novo_limpo] = {
-                    "cpf": cpf_novo_limpo,
-                    "nome": nome_cli,
-                    "email": email_cli,
-                    "telefone": tel_cli,
-                    "renda": renda_cli,
-                    "nascimento": nasc_cli,
-                    "senha": dados_atuais.get("senha", "Senha@123")
-                }
-                
-                if cpf_atual and cpf_atual != cpf_novo_limpo and cpf_atual in st.session_state["banco_clientes"]:
-                    del st.session_state["banco_clientes"][cpf_atual]
-                    st.session_state["usuario_logado"] = cpf_novo_limpo
-                    
-                st.success(f"Ficha do cliente registrada com sucesso e atrelada ao CPF {cpf_novo_limpo}!")
-
-    elif menu == "Cadastro de Corretor":
-        st.title("Cadastro de Corretor")
-        st.write("Informe os dados do corretor parceiro para inclusão no sistema:")
-
-        with st.form("form_cadastro_corretor"):
-            nome_corr = st.text_input("Nome Completo do Corretor", placeholder="Ex: Carlos Eduardo Silva")
-            cpf_corr = st.text_input("CPF do Corretor", placeholder="Digite apenas os números")
-            creci = st.text_input("Número do CRECI", placeholder="Ex: 12345-F")
-            telefone_corr = st.text_input("Telefone / WhatsApp", placeholder="Ex: (82) 98888-8888")
-
-            btn_salvar_corr = st.form_submit_button("Salvar Corretor")
-
-        if btn_salvar_corr:
-            cpf_corr_limpo = re.sub(r"\D", "", cpf_corr)
-
-            if not nome_corr or not cpf_corr_limpo or not creci:
-                st.error("Por favor, preencha os campos obrigatórios (Nome, CPF e CRECI).")
-            else:
-                st.session_state["banco_corretores"][cpf_corr_limpo] = {
-                    "nome": nome_corr,
-                    "cpf": cpf_corr_limpo,
-                    "creci": creci,
-                    "telefone": telefone_corr,
-                }
-                st.success(f"Corretor **{nome_corr}** (CRECI: {creci}) cadastrado com sucesso!")
-
-    elif menu == "Simulação":
-        st.title("Simulação de Financiamento")
-        st.write("Calcule a estimativa de financiamento para o cliente:")
-
-        cpf_simulacao = st.text_input("Informe o CPF do Cliente Cadastrado:", placeholder="Digite apenas números")
-
-        imoveis_opcoes = {
-            "Residencial Bosque Imperial - R$ 350.000,00": 350000.0,
-            "Condomínio Jardim das Palmeiras - R$ 220.000,00": 220000.0,
-            "Residencial Vista Verde - R$ 185.000,00": 185000.0
-        }
-
-        imovel_selecionado = st.selectbox(
-            "Selecione o Imóvel:",
-            options=list(imoveis_opcoes.keys())
+    with st.form("form_atualizar_cliente_passo1"):
+        nome_cli = st.text_input("Nome Completo", value=dados_atuais.get("nome", ""))
+        
+        cpf_cli = st.text_input(
+            "CPF do Cliente",
+            value=dados_atuais.get("cpf", cpf_atual),
+            disabled=True,
+            help="O CPF está vinculado à sua conta e não pode ser alterado."
         )
         
-        valor_imovel = imoveis_opcoes[imovel_selecionado]
-        entrada = st.number_input("Valor da Entrada (R$)", value=50000.0, step=5000.0)
+        email_cli = st.text_input("E-mail", value=dados_atuais.get("email", ""))
+        tel_cli = st.text_input("Telefone / WhatsApp", value=dados_atuais.get("telefone", ""))
+        
+        c1, c2 = st.columns(2)
+        with c1:
+            renda_cli = st.number_input("Renda Mensal (R$)", value=float(dados_atuais.get("renda", 0.0)), step=500.0)
+        with c2:
+            nasc_cli = st.text_input("Data de Nascimento", value=dados_atuais.get("nascimento", ""))
 
-        if st.button("Simular Financiamento"):
-            cpf_limpo = re.sub(r"\D", "", cpf_simulacao)
+        btn_avancar = st.form_submit_button("Salvar e Avançar para o Cadastro de Corretor →", use_container_width=True)
 
-            if not cpf_limpo:
-                st.error("É necessário informar o CPF do cliente para realizar a simulação.")
-            elif cpf_limpo not in st.session_state["banco_clientes"]:
-                st.error("CPF não localizado no cadastro. Por favor, cadastre o cliente antes de simular.")
-            elif entrada > valor_imovel:
-                st.error("O valor da entrada não pode ser maior que o valor total do imóvel.")
+    if btn_avancar:
+        cpf_salvar = dados_atuais.get("cpf", cpf_atual)
+        if not cpf_salvar or not nome_cli or not email_cli:
+            st.error("Preencha ao menos Nome e E-mail.")
+        else:
+            st.session_state["banco_clientes"][cpf_salvar] = {
+                "cpf": cpf_salvar,
+                "nome": nome_cli,
+                "email": email_cli,
+                "telefone": tel_cli,
+                "renda": renda_cli,
+                "nascimento": nasc_cli,
+                "senha": dados_atuais.get("senha", "Senha@123")
+            }
+            st.session_state["etapa_fluxo"] = "passo2_corretor"
+            st.rerun()
+
+# --- 6. PASSO 2: CADASTRO DO CORRETOR ---
+elif st.session_state["etapa_fluxo"] == "passo2_corretor":
+    st.markdown("## Passo 2 de 3: Cadastro do Corretor")
+    st.write("Informe os dados do corretor responsável ou parceiro para vinculação à simulação:")
+
+    with st.form("form_cadastro_corretor_passo2"):
+        nome_corr = st.text_input("Nome Completo do Corretor", placeholder="Ex: Carlos Eduardo Silva")
+        cpf_corr = st.text_input("CPF do Corretor", placeholder="Digite apenas os números")
+        creci = st.text_input("Número do CRECI", placeholder="Ex: 12345-F")
+        telefone_corr = st.text_input("Telefone / WhatsApp", placeholder="Ex: (82) 98888-8888")
+
+        btn_avancar_simulacao = st.form_submit_button("Salvar Corretor e Ir para Simulação →", use_container_width=True)
+
+    if btn_avancar_simulacao:
+        cpf_corr_limpo = re.sub(r"\D", "", cpf_corr)
+
+        if not nome_corr or not cpf_corr_limpo or not creci:
+            st.error("Por favor, preencha os campos obrigatórios (Nome, CPF e CRECI).")
+        else:
+            st.session_state["banco_corretores"][cpf_corr_limpo] = {
+                "nome": nome_corr,
+                "cpf": cpf_corr_limpo,
+                "creci": creci,
+                "telefone": telefone_corr,
+            }
+            st.session_state["etapa_fluxo"] = "passo3_simulacao"
+            st.rerun()
+
+# --- 7. PASSO 3: SIMULAÇÃO DO FINANCIAMENTO ---
+elif st.session_state["etapa_fluxo"] == "passo3_simulacao":
+    st.markdown("## Passo 3 de 3: Simulação de Financiamento")
+    st.write("Confirme os dados de entrada para gerar a proposta completa de financiamento.")
+
+    imoveis_opcoes = {
+        "Residencial Bosque Imperial - R$ 350.000,00": 350000.0,
+        "Condomínio Jardim das Palmeiras - R$ 220.000,00": 220000.0,
+        "Residencial Vista Verde - R$ 185.000,00": 185000.0
+    }
+
+    imovel_padrao = st.session_state.get("imovel_selecionado", "Residencial Bosque Imperial - R$ 350.000,00")
+    lista_chaves = list(imoveis_opcoes.keys())
+    idx_padrao = lista_chaves.index(imovel_padrao) if imovel_padrao in lista_chaves else 0
+
+    imovel_selecionado = st.selectbox(
+        "Imóvel Selecionado:",
+        options=lista_chaves,
+        index=idx_padrao
+    )
+    
+    valor_imovel = imoveis_opcoes[imovel_selecionado]
+    entrada = st.number_input("Valor da Entrada (R$)", value=50000.0, step=5000.0)
+
+    if st.button("Gerar Cálculo Final da Simulação", use_container_width=True):
+        cpf_limpo = st.session_state.get("usuario_logado", "")
+
+        if not cpf_limpo or cpf_limpo not in st.session_state["banco_clientes"]:
+            st.error("CPF de cliente válido não encontrado na sessão. Retorne ao início.")
+        elif entrada > valor_imovel:
+            st.error("O valor da entrada não pode ser maior que o valor total do imóvel.")
+        else:
+            cliente = st.session_state["banco_clientes"][cpf_limpo]
+            renda_cliente = cliente.get("renda", 0.0)
+
+            salario_minimo = 1518.0
+            qtd_salarios = renda_cliente / salario_minimo if salario_minimo > 0 else 0
+
+            if qtd_salarios <= 1:
+                taxa_juros_mensal = 0.5
+            elif qtd_salarios <= 2:
+                taxa_juros_mensal = 1.0
+            elif qtd_salarios <= 3:
+                taxa_juros_mensal = 2.0
+            elif qtd_salarios <= 4:
+                taxa_juros_mensal = 4.0
             else:
-                cliente = st.session_state["banco_clientes"][cpf_limpo]
-                renda_cliente = cliente.get("renda", 0.0)
+                taxa_juros_mensal = 6.0
 
-                salario_minimo = 1518.0
-                qtd_salarios = renda_cliente / salario_minimo if salario_minimo > 0 else 0
+            taxa_juros_anual = taxa_juros_mensal * 12
 
-                if qtd_salarios <= 1:
-                    taxa_juros_mensal = 0.5
-                elif qtd_salarios <= 2:
-                    taxa_juros_mensal = 1.0
-                elif qtd_salarios <= 3:
-                    taxa_juros_mensal = 2.0
-                elif qtd_salarios <= 4:
-                    taxa_juros_mensal = 4.0
-                else:
-                    taxa_juros_mensal = 6.0
+            porcentagem_entrada = (entrada / valor_imovel) * 100
 
-                taxa_juros_anual = taxa_juros_mensal * 12
+            if porcentagem_entrada >= 100:
+                pct_subsidio = 0.35
+            elif porcentagem_entrada > 50:
+                pct_subsidio = 0.20
+            elif porcentagem_entrada > 45:
+                pct_subsidio = 0.12
+            elif porcentagem_entrada > 20:
+                pct_subsidio = 0.07
+            else:
+                pct_subsidio = 0.02
 
-                porcentagem_entrada = (entrada / valor_imovel) * 100
+            valor_subsidio = valor_imovel * pct_subsidio
+            saldo_devedor = valor_imovel - entrada - valor_subsidio
+            saldo_devedor_exibir = max(0.0, saldo_devedor)
 
-                if porcentagem_entrada >= 100:
-                    pct_subsidio = 0.35
-                elif porcentagem_entrada > 50:
-                    pct_subsidio = 0.20
-                elif porcentagem_entrada > 45:
-                    pct_subsidio = 0.12
-                elif porcentagem_entrada > 20:
-                    pct_subsidio = 0.07
-                else:
-                    pct_subsidio = 0.02
+            st.markdown(
+                f"""
+                <div class="bloco-resultado-escuro">
+                    Cliente: {cliente.get('nome')} | Renda Mensal: R$ {renda_cliente:,.2f} ({qtd_salarios:.1f} SM)
+                </div>
+                <div class="bloco-resultado-escuro">
+                    Taxa de Juros Aplicada: {taxa_juros_mensal:.1f}% ao mês ({taxa_juros_anual:.1f}% ao ano)
+                </div>
+                <div class="bloco-resultado-escuro">
+                    Valor do Imóvel Selecionado: R$ {valor_imovel:,.2f}
+                </div>
+                <div class="bloco-resultado-escuro">
+                    Subsídio Concedido ({pct_subsidio * 100:.0f}%): R$ {valor_subsidio:,.2f}
+                </div>
+                <div class="bloco-resultado-escuro">
+                    Saldo Final a Financiar: R$ {saldo_devedor_exibir:,.2f}
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
 
-                valor_subsidio = valor_imovel * pct_subsidio
-                saldo_devedor = valor_imovel - entrada - valor_subsidio
-                saldo_devedor_exibir = max(0.0, saldo_devedor)
-
-                st.markdown(
-                    f"""
-                    <div class="bloco-resultado-escuro">
-                        Cliente: {cliente.get('nome')} | Renda Mensal: R$ {renda_cliente:,.2f} ({qtd_salarios:.1f} SM)
-                    </div>
-                    <div class="bloco-resultado-escuro">
-                        Taxa de Juros Aplicada: {taxa_juros_mensal:.1f}% ao mês ({taxa_juros_anual:.1f}% ao ano)
-                    </div>
-                    <div class="bloco-resultado-escuro">
-                        Valor do Imóvel Selecionado: R$ {valor_imovel:,.2f}
-                    </div>
-                    <div class="bloco-resultado-escuro">
-                        Subsídio Concedido ({pct_subsidio * 100:.0f}%): R$ {valor_subsidio:,.2f}
-                    </div>
-                    <div class="bloco-resultado-escuro">
-                        Saldo Final a Financiar: R$ {saldo_devedor_exibir:,.2f}
-                    </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
-                
+    st.write("")
+    if st.button("← Voltar ao Painel Geral", use_container_width=True):
+        st.session_state["etapa_fluxo"] = "painel_geral"
+        st.rerun()
+        
