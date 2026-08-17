@@ -58,7 +58,7 @@ def validar_senha(senha: str) -> bool:
     return tem_maiuscula and tem_especial
 
 
-# --- BANCO DE DADOS GLOBAL ATRELADO AO CPF ---
+# --- BANCOS DE DADOS EM MEMÓRIA ---
 if "banco_clientes" not in st.session_state:
     st.session_state["banco_clientes"] = {
         "12345678900": {
@@ -71,6 +71,9 @@ if "banco_clientes" not in st.session_state:
             "senha": "Senha@123"
         }
     }
+
+if "banco_corretores" not in st.session_state:
+    st.session_state["banco_corretores"] = {}
 
 if "usuario_logado" not in st.session_state:
     st.session_state["usuario_logado"] = None
@@ -188,7 +191,6 @@ elif st.session_state["tela"] == "cadastro_inicial":
             elif senha != confirmar_senha:
                 st.error("As senhas digitadas não coincidem.")
             else:
-                # Salva o cliente estruturado pelo CPF
                 st.session_state["banco_clientes"][cpf_limpo] = {
                     "cpf": cpf_limpo,
                     "nome": nome,
@@ -394,7 +396,6 @@ elif st.session_state["tela"] == "sistema":
             if not cpf_novo_limpo or not nome_cli or not email_cli:
                 st.error("Preencha ao menos Nome, CPF e E-mail.")
             else:
-                # Salva a variável do cliente indexada ao CPF digitado
                 st.session_state["banco_clientes"][cpf_novo_limpo] = {
                     "cpf": cpf_novo_limpo,
                     "nome": nome_cli,
@@ -405,7 +406,6 @@ elif st.session_state["tela"] == "sistema":
                     "senha": dados_atuais.get("senha", "Senha@123")
                 }
                 
-                # Se o CPF tiver sido alterado, remove o registro antigo
                 if cpf_atual and cpf_atual != cpf_novo_limpo and cpf_atual in st.session_state["banco_clientes"]:
                     del st.session_state["banco_clientes"][cpf_atual]
                     st.session_state["usuario_logado"] = cpf_novo_limpo
@@ -414,23 +414,57 @@ elif st.session_state["tela"] == "sistema":
 
     elif menu == "Cadastro de Corretor":
         st.title("Cadastro de Corretor")
-        nome_corr = st.text_input("Nome Completo do Corretor")
-        creci = st.text_input("Número do CRECI")
-        telefone_corr = st.text_input("Telefone/WhatsApp")
-        if st.button("Salvar Corretor"):
-            st.success(f"Corretor {nome_corr} cadastrado com sucesso!")
+        st.write("Informe os dados do corretor parceiro para inclusão no sistema:")
+
+        with st.form("form_cadastro_corretor"):
+            nome_corr = st.text_input("Nome Completo do Corretor", placeholder="Ex: Carlos Eduardo Silva")
+            cpf_corr = st.text_input("CPF do Corretor", placeholder="Digite apenas os números")
+            creci = st.text_input("Número do CRECI", placeholder="Ex: 12345-F")
+            telefone_corr = st.text_input("Telefone / WhatsApp", placeholder="Ex: (82) 98888-8888")
+
+            btn_salvar_corr = st.form_submit_button("Salvar Corretor")
+
+        if btn_salvar_corr:
+            cpf_corr_limpo = re.sub(r"\D", "", cpf_corr)
+
+            if not nome_corr or not cpf_corr_limpo or not creci:
+                st.error("Por favor, preencha os campos obrigatórios (Nome, CPF e CRECI).")
+            else:
+                st.session_state["banco_corretores"][cpf_corr_limpo] = {
+                    "nome": nome_corr,
+                    "cpf": cpf_corr_limpo,
+                    "creci": creci,
+                    "telefone": telefone_corr,
+                }
+                st.success(f"Corretor **{nome_corr}** (CRECI: {creci}) cadastrado com sucesso!")
 
     elif menu == "Simulação":
         st.title("Simulação de Financiamento")
-        st.write("Calcule a estimativa de parcelas para o seu cliente:")
-        valor_imovel = st.number_input("Valor do Imóvel (R$)", value=300000)
-        entrada = st.number_input("Valor da Entrada (R$)", value=60000)
-        parcelas = st.slider("Número de Parcelas (Meses)", 12, 420, 360)
+        st.write("Calcule a estimativa de financiamento para o cliente:")
 
-        if st.button("Simular"):
-            saldo_devedor = valor_imovel - entrada
-            parcela_estimada = saldo_devedor / parcelas
-            st.info(f"Valor a financiar: R$ {saldo_devedor:,.2f}")
-            st.success(f"Valor estimado da parcela simples: R$ {parcela_estimada:,.2f}")
+        # Mapeamento dos imóveis e seus respectivos valores numéricos
+        imoveis_opcoes = {
+            "Residencial Bosque Imperial - R$ 350.000,00": 350000.0,
+            "Condomínio Jardim das Palmeiras - R$ 220.000,00": 220000.0,
+            "Residencial Vista Verde - R$ 185.000,00": 185000.0
+        }
 
-            
+        imovel_selecionado = st.selectbox(
+            "Selecione o Imóvel:",
+            options=list(imoveis_opcoes.keys())
+        )
+        
+        # Puxa apenas o valor do imóvel selecionado
+        valor_imovel = imoveis_opcoes[imovel_selecionado]
+
+        entrada = st.number_input("Valor da Entrada (R$)", value=50000.0, step=5000.0)
+
+        if st.button("Simular Financiamento"):
+            if entrada >= valor_imovel:
+                st.error("O valor da entrada não pode ser igual ou superior ao valor do imóvel.")
+            else:
+                saldo_devedor = valor_imovel - entrada
+                st.info(f"**Valor do Imóvel Selecionado:** R$ {valor_imovel:,.2f}")
+                st.success(f"**Saldo a Financiar (Valor do Imóvel - Entrada):** R$ {saldo_devedor:,.2f}")
+
+                
