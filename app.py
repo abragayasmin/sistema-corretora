@@ -11,7 +11,6 @@ CAMINHO_LOGO = os.path.join(DIRETORIO_ATUAL, "logo_G&G.png")
 CAMINHO_SIDEBAR = os.path.join(DIRETORIO_ATUAL, "Barra_lateral.png")
 
 def buscar_imagem(nome_base):
-    """Busca imagens na pasta ignorando diferenças de maiúsculas/minúsculas."""
     for arquivo in os.listdir(DIRETORIO_ATUAL):
         if nome_base.lower() in arquivo.lower() and arquivo.endswith((".png", ".jpg", ".jpeg")):
             return os.path.join(DIRETORIO_ATUAL, arquivo)
@@ -26,7 +25,6 @@ LOGO_EXISTE = os.path.exists(CAMINHO_LOGO)
 
 @st.cache_data
 def get_image_base64(path):
-    """Converte imagem local para base64 com cache."""
     if path and os.path.exists(path):
         with open(path, "rb") as image_file:
             encoded_string = base64.b64encode(image_file.read()).decode()
@@ -36,10 +34,8 @@ def get_image_base64(path):
 
 @st.cache_data
 def carregar_imagem_padronizada(caminho, largura=600, altura=400):
-    """Padroniza a proporção e tamanho das fotos dos imóveis."""
     if caminho and os.path.exists(caminho):
         img = Image.open(caminho)
-        # Redimensiona mantendo preenchimento proporcional (Crop central)
         img_proporcional = img.copy()
         img_proporcional.thumbnail((largura, altura * 2))
         
@@ -62,6 +58,23 @@ def validar_senha(senha: str) -> bool:
     return tem_maiuscula and tem_especial
 
 
+# --- INICIALIZAÇÃO DO BANCO DE DADOS EM MEMÓRIA ---
+if "banco_clientes" not in st.session_state:
+    # Estrutura base com um usuário padrão de testes
+    st.session_state["banco_clientes"] = {
+        "12345678900": {
+            "nome": "Cliente Exemplo",
+            "email": "cliente@email.com",
+            "telefone": "(82) 99999-9999",
+            "nascimento": "1990-01-01",
+            "renda": 5000.0,
+            "senha": "Senha@123"
+        }
+    }
+
+if "usuario_logado" not in st.session_state:
+    st.session_state["usuario_logado"] = None
+
 # --- 1. CONFIGURAÇÃO INICIAL DA PÁGINA ---
 st.set_page_config(
     page_title="G&G Imóveis",
@@ -71,7 +84,6 @@ st.set_page_config(
 if "tela" not in st.session_state:
     st.session_state["tela"] = "login"
 
-# Esconde a barra lateral nas telas de Login e Cadastro
 if st.session_state["tela"] in ["login", "cadastro_inicial"]:
     st.markdown(
         """
@@ -99,7 +111,7 @@ if st.session_state["tela"] == "login":
         st.write("")
 
         with st.form("form_login"):
-            cpf = st.text_input("CPF / Usuário", placeholder="Digite seu CPF")
+            cpf = st.text_input("CPF / Usuário", placeholder="Digite apenas os números do seu CPF")
             senha = st.text_input("Senha", type="password", placeholder="Digite sua senha")
             st.write("")
 
@@ -110,15 +122,17 @@ if st.session_state["tela"] == "login":
                 submit_cancelar = st.form_submit_button("Cancelar", use_container_width=True)
 
         if submit_login:
-            if len(cpf) >= 6 and validar_senha(senha):
-                st.success("Login realizado com sucesso! Bem-vindo(a).")
-                st.session_state["tela"] = "sistema"
-                st.rerun()
+            cpf_limpo = re.sub(r"\D", "", cpf)
+            if cpf_limpo in st.session_state["banco_clientes"]:
+                usuario = st.session_state["banco_clientes"][cpf_limpo]
+                if usuario["senha"] == senha:
+                    st.session_state["usuario_logado"] = cpf_limpo
+                    st.session_state["tela"] = "sistema"
+                    st.rerun()
+                else:
+                    st.error("Senha incorreta!")
             else:
-                st.error(
-                    "Credenciais inválidas! A senha deve ter no mínimo 6 caracteres, "
-                    "incluindo 1 letra maiúscula e 1 caractere especial."
-                )
+                st.error("CPF não cadastrado no sistema!")
 
         st.divider()
 
@@ -144,9 +158,17 @@ elif st.session_state["tela"] == "cadastro_inicial":
         st.write("")
 
         with st.form("form_cadastro"):
-            nome = st.text_input("Nome Completo", placeholder="Digite seu nome completo")
-            cpf = st.text_input("CPF", placeholder="Digite seu CPF")
-            email = st.text_input("E-mail", placeholder="Digite seu e-mail")
+            nome = st.text_input("Nome Completo", placeholder="Ex: João da Silva")
+            cpf = st.text_input("CPF", placeholder="Apenas números")
+            email = st.text_input("E-mail", placeholder="seuemail@exemplo.com")
+            telefone = st.text_input("Telefone / WhatsApp", placeholder="Ex: (82) 99999-9999")
+            
+            c1, c2 = st.columns(2)
+            with c1:
+                data_nasc = st.date_input("Data de Nascimento")
+            with c2:
+                renda = st.number_input("Renda Familiar Mensal (R$)", min_value=0.0, step=500.0)
+
             senha = st.text_input("Senha", type="password", placeholder="Crie uma senha")
             confirmar_senha = st.text_input("Confirmar Senha", type="password", placeholder="Repita a senha")
 
@@ -155,14 +177,27 @@ elif st.session_state["tela"] == "cadastro_inicial":
             submit_cadastrar = st.form_submit_button("Cadastrar", use_container_width=True)
 
         if submit_cadastrar:
-            if not nome or not cpf or not email or not senha:
+            cpf_limpo = re.sub(r"\D", "", cpf)
+
+            if not nome or not cpf_limpo or not email or not telefone or not senha:
                 st.error("Por favor, preencha todos os campos obrigatórios.")
+            elif cpf_limpo in st.session_state["banco_clientes"]:
+                st.error(" Este CPF já está cadastrado na plataforma! Faça o login ou recupere sua conta.")
             elif not validar_senha(senha):
                 st.error("A senha não atende aos requisitos mínimos (6+ caracteres, 1 maiúscula e 1 caractere especial).")
             elif senha != confirmar_senha:
                 st.error("As senhas digitadas não coincidem.")
             else:
-                st.success("Cadastro efetuado com sucesso!")
+                # Salva o cliente no banco em memória
+                st.session_state["banco_clientes"][cpf_limpo] = {
+                    "nome": nome,
+                    "email": email,
+                    "telefone": telefone,
+                    "nascimento": str(data_nasc),
+                    "renda": renda,
+                    "senha": senha,
+                }
+                st.success("Cadastro efetuado com sucesso! Agora faça seu login.")
                 st.session_state["tela"] = "login"
                 st.rerun()
 
@@ -178,18 +213,13 @@ elif st.session_state["tela"] == "sistema":
     st.markdown(
         f"""
         <style>
-            /* Barra Superior estilizada em Tom Azul Escuro Profundo (harmoniza com a piscina e a logo) */
             [data-testid="stHeader"] {{
                 background: linear-gradient(90deg, #101c2c 0%, #1b2d42 100%) !important;
             }}
-            
-            /* Fundo Principal Claro */
             .stApp {{
                 background-color: #f8fafc;
                 color: #0f172a;
             }}
-            
-            /* Barra Lateral */
             [data-testid="stSidebar"] {{
                 background-image: url("{sidebar_bg}");
                 background-size: cover;
@@ -212,8 +242,6 @@ elif st.session_state["tela"] == "sistema":
                 color: #FFFFFF !important;
                 text-shadow: 2px 2px 4px rgba(0,0,0,0.9);
             }}
-
-            /* Estilo dos Cards com Bordas Arredondadas Superior e Inferior */
             .card-imovel-main {{
                 background-color: #ffffff;
                 border-radius: 0 0 12px 12px;
@@ -240,15 +268,12 @@ elif st.session_state["tela"] == "sistema":
                 font-size: 16px;
                 margin-top: 12px;
             }}
-            
-            /* Títulos */
             .titulo-principal {{
                 color: #0f172a;
                 font-size: 32px;
                 font-weight: 800;
                 margin-bottom: 2px;
             }}
-            /* Subtítulo ajustado para PRETO */
             .subtitulo-comercial {{
                 color: #0f172a;
                 font-size: 18px;
@@ -264,7 +289,6 @@ elif st.session_state["tela"] == "sistema":
         unsafe_allow_html=True,
     )
 
-    # Menu na Barra Lateral
     st.sidebar.title("Navegação")
     menu = st.sidebar.radio(
         "Selecione a Tela:",
@@ -278,6 +302,7 @@ elif st.session_state["tela"] == "sistema":
     )
 
     if menu == "Sair":
+        st.session_state["usuario_logado"] = None
         st.session_state["tela"] = "login"
         st.rerun()
 
@@ -291,7 +316,6 @@ elif st.session_state["tela"] == "sistema":
 
         col_img1, col_img2, col_img3 = st.columns(3)
 
-        # Imóvel 1: Bosque Imperial
         with col_img1:
             img_bosque = carregar_imagem_padronizada(CAMINHO_BOSQUE)
             if img_bosque:
@@ -307,7 +331,6 @@ elif st.session_state["tela"] == "sistema":
                 unsafe_allow_html=True,
             )
 
-        # Imóvel 2: Jardim das Palmeiras
         with col_img2:
             img_palmeiras = carregar_imagem_padronizada(CAMINHO_PALMEIRAS)
             if img_palmeiras:
@@ -323,7 +346,6 @@ elif st.session_state["tela"] == "sistema":
                 unsafe_allow_html=True,
             )
 
-        # Imóvel 3: Vista Verde
         with col_img3:
             img_vista = carregar_imagem_padronizada(CAMINHO_VISTA)
             if img_vista:
@@ -340,12 +362,37 @@ elif st.session_state["tela"] == "sistema":
             )
 
     elif menu == "Cadastro de Cliente":
-        st.title("Cadastro de Cliente")
-        nome_cli = st.text_input("Nome Completo do Cliente")
-        cpf_cli = st.text_input("CPF")
-        email_cli = st.text_input("E-mail")
-        if st.button("Salvar Cliente"):
-            st.success(f"Cliente {nome_cli} cadastrado com sucesso!")
+        st.title("Cadastro e Dados do Cliente")
+        st.write("Consulte ou atualize a ficha cadastral do cliente no sistema.")
+
+        # Puxa os dados do usuário atual conectado para preenchimento automático
+        cpf_atual = st.session_state.get("usuario_logado", "")
+        dados_atuais = st.session_state["banco_clientes"].get(cpf_atual, {})
+
+        with st.form("form_atualizar_cliente"):
+            nome_cli = st.text_input("Nome Completo", value=dados_atuais.get("nome", ""))
+            cpf_cli = st.text_input("CPF (Não editável)", value=cpf_atual, disabled=True)
+            email_cli = st.text_input("E-mail", value=dados_atuais.get("email", ""))
+            tel_cli = st.text_input("Telefone / WhatsApp", value=dados_atuais.get("telefone", ""))
+            
+            c1, c2 = st.columns(2)
+            with c1:
+                renda_cli = st.number_input("Renda Familiar Mensal (R$)", value=float(dados_atuais.get("renda", 0.0)))
+            with c2:
+                nasc_cli = st.text_input("Data de Nascimento", value=dados_atuais.get("nascimento", ""))
+
+            btn_salvar = st.form_submit_button("Atualizar Ficha Cadastral")
+
+        if btn_salvar:
+            if cpf_atual in st.session_state["banco_clientes"]:
+                st.session_state["banco_clientes"][cpf_atual].update({
+                    "nome": nome_cli,
+                    "email": email_cli,
+                    "telefone": tel_cli,
+                    "renda": renda_cli,
+                    "nascimento": nasc_cli
+                })
+                st.success("Dados cadastrais atualizados com sucesso!")
 
     elif menu == "Cadastro de Corretor":
         st.title("Cadastro de Corretor")
