@@ -1,6 +1,7 @@
 import base64
 import os
 import re
+from PIL import Image
 import streamlit as st
 
 # --- CONFIGURAÇÃO DE CAMINHOS ---
@@ -9,8 +10,8 @@ DIRETORIO_ATUAL = os.path.dirname(os.path.abspath(__file__))
 CAMINHO_LOGO = os.path.join(DIRETORIO_ATUAL, "logo_G&G.png")
 CAMINHO_SIDEBAR = os.path.join(DIRETORIO_ATUAL, "Barra_lateral.png")
 
-# Função auxiliar para buscar imagem aceitando variações de nome de arquivo
 def buscar_imagem(nome_base):
+    """Busca imagens na pasta ignorando diferenças de maiúsculas/minúsculas."""
     for arquivo in os.listdir(DIRETORIO_ATUAL):
         if nome_base.lower() in arquivo.lower() and arquivo.endswith((".png", ".jpg", ".jpeg")):
             return os.path.join(DIRETORIO_ATUAL, arquivo)
@@ -21,12 +22,11 @@ CAMINHO_PALMEIRAS = buscar_imagem("palmeira") or buscar_imagem("jardim")
 CAMINHO_VISTA = buscar_imagem("vista")
 
 LOGO_EXISTE = os.path.exists(CAMINHO_LOGO)
-SIDEBAR_EXISTE = os.path.exists(CAMINHO_SIDEBAR)
 
 
 @st.cache_data
 def get_image_base64(path):
-    """Converte uma imagem local em string Base64 (com cache para performance)."""
+    """Converte imagem local para base64 com cache."""
     if path and os.path.exists(path):
         with open(path, "rb") as image_file:
             encoded_string = base64.b64encode(image_file.read()).decode()
@@ -34,8 +34,27 @@ def get_image_base64(path):
     return ""
 
 
+@st.cache_data
+def carregar_imagem_padronizada(caminho, largura=600, altura=400):
+    """Padroniza a proporção e tamanho das fotos dos imóveis."""
+    if caminho and os.path.exists(caminho):
+        img = Image.open(caminho)
+        # Redimensiona mantendo preenchimento proporcional (Crop central)
+        img_proporcional = img.copy()
+        img_proporcional.thumbnail((largura, altura * 2))
+        
+        w, h = img_proporcional.size
+        left = (w - largura) / 2 if w > largura else 0
+        top = (h - altura) / 2 if h > altura else 0
+        right = (w + largura) / 2 if w > largura else w
+        bottom = (h + altura) / 2 if h > altura else h
+        
+        img_cropped = img_proporcional.crop((left, top, right, bottom))
+        return img_cropped.resize((largura, altura))
+    return None
+
+
 def validar_senha(senha: str) -> bool:
-    """Valida se a senha tem no mínimo 6 caracteres, 1 letra maiúscula e 1 caractere especial."""
     if len(senha) < 6:
         return False
     tem_maiuscula = bool(re.search(r"[A-Z]", senha))
@@ -46,7 +65,6 @@ def validar_senha(senha: str) -> bool:
 # --- 1. CONFIGURAÇÃO INICIAL DA PÁGINA ---
 st.set_page_config(
     page_title="G&G Imóveis",
-    page_icon=CAMINHO_LOGO if LOGO_EXISTE else "🏠",
     layout="wide",
 )
 
@@ -82,20 +100,14 @@ if st.session_state["tela"] == "login":
 
         with st.form("form_login"):
             cpf = st.text_input("CPF / Usuário", placeholder="Digite seu CPF")
-            senha = st.text_input(
-                "Senha", type="password", placeholder="Digite sua senha"
-            )
+            senha = st.text_input("Senha", type="password", placeholder="Digite sua senha")
             st.write("")
 
             btn_col1, btn_col2 = st.columns(2)
             with btn_col1:
-                submit_login = st.form_submit_button(
-                    "Entrar", use_container_width=True
-                )
+                submit_login = st.form_submit_button("Entrar", use_container_width=True)
             with btn_col2:
-                submit_cancelar = st.form_submit_button(
-                    "Cancelar", use_container_width=True
-                )
+                submit_cancelar = st.form_submit_button("Cancelar", use_container_width=True)
 
         if submit_login:
             if len(cpf) >= 6 and validar_senha(senha):
@@ -132,33 +144,21 @@ elif st.session_state["tela"] == "cadastro_inicial":
         st.write("")
 
         with st.form("form_cadastro"):
-            nome = st.text_input(
-                "Nome Completo", placeholder="Digite seu nome completo"
-            )
+            nome = st.text_input("Nome Completo", placeholder="Digite seu nome completo")
             cpf = st.text_input("CPF", placeholder="Digite seu CPF")
             email = st.text_input("E-mail", placeholder="Digite seu e-mail")
-            senha = st.text_input(
-                "Senha", type="password", placeholder="Crie uma senha"
-            )
-            confirmar_senha = st.text_input(
-                "Confirmar Senha", type="password", placeholder="Repita a senha"
-            )
+            senha = st.text_input("Senha", type="password", placeholder="Crie uma senha")
+            confirmar_senha = st.text_input("Confirmar Senha", type="password", placeholder="Repita a senha")
 
-            st.caption(
-                " Requisitos da senha: mínimo de 6 caracteres, 1 caractere especial e 1 letra maiúscula."
-            )
+            st.caption("Requisitos da senha: mínimo de 6 caracteres, 1 caractere especial e 1 letra maiúscula.")
             st.write("")
-            submit_cadastrar = st.form_submit_button(
-                "Cadastrar", use_container_width=True
-            )
+            submit_cadastrar = st.form_submit_button("Cadastrar", use_container_width=True)
 
         if submit_cadastrar:
             if not nome or not cpf or not email or not senha:
                 st.error("Por favor, preencha todos os campos obrigatórios.")
             elif not validar_senha(senha):
-                st.error(
-                    "A senha não atende aos requisitos mínimos (6+ caracteres, 1 maiúscula e 1 caractere especial)."
-                )
+                st.error("A senha não atende aos requisitos mínimos (6+ caracteres, 1 maiúscula e 1 caractere especial).")
             elif senha != confirmar_senha:
                 st.error("As senhas digitadas não coincidem.")
             else:
@@ -175,16 +175,21 @@ elif st.session_state["tela"] == "cadastro_inicial":
 elif st.session_state["tela"] == "sistema":
     sidebar_bg = get_image_base64(CAMINHO_SIDEBAR)
 
-    # Estilização CSS: Tema Claro, Solar, Familiar e Acolhedor
     st.markdown(
         f"""
         <style>
-            /* Fundo principal mais claro e limpo */
-            .stApp {{
-                background-color: #f8fafc;
-                color: #1e293b;
+            /* Barra Superior estilizada em Tom Azul Escuro Profundo (harmoniza com a piscina e a logo) */
+            [data-testid="stHeader"] {{
+                background: linear-gradient(90deg, #101c2c 0%, #1b2d42 100%) !important;
             }}
             
+            /* Fundo Principal Claro */
+            .stApp {{
+                background-color: #f8fafc;
+                color: #0f172a;
+            }}
+            
+            /* Barra Lateral */
             [data-testid="stSidebar"] {{
                 background-image: url("{sidebar_bg}");
                 background-size: cover;
@@ -208,7 +213,7 @@ elif st.session_state["tela"] == "sistema":
                 text-shadow: 2px 2px 4px rgba(0,0,0,0.9);
             }}
 
-            /* Estilo dos Cards em Tom Claro com Sombra Suave */
+            /* Estilo dos Cards com Bordas Arredondadas Superior e Inferior */
             .card-imovel-main {{
                 background-color: #ffffff;
                 border-radius: 0 0 12px 12px;
@@ -217,7 +222,6 @@ elif st.session_state["tela"] == "sistema":
                 border: 1px solid #e2e8f0;
                 border-top: none;
                 margin-top: -10px;
-                transition: transform 0.2s ease;
             }}
             .card-imovel-main h3 {{
                 margin: 0 0 8px 0;
@@ -227,39 +231,40 @@ elif st.session_state["tela"] == "sistema":
             }}
             .card-imovel-main p {{
                 margin: 6px 0;
-                color: #64748b;
+                color: #475569;
                 font-size: 14px;
             }}
             .card-imovel-main .valor {{
-                color: #d97706; /* Dourado / Laranja Quente */
+                color: #d97706;
                 font-weight: bold;
                 font-size: 16px;
                 margin-top: 12px;
             }}
             
-            /* Título Comercial */
+            /* Títulos */
             .titulo-principal {{
                 color: #0f172a;
                 font-size: 32px;
                 font-weight: 800;
                 margin-bottom: 2px;
             }}
+            /* Subtítulo ajustado para PRETO */
             .subtitulo-comercial {{
-                color: #0284c7; /* Azul Mar / Verão */
-                font-size: 20px;
+                color: #0f172a;
+                font-size: 18px;
                 font-weight: 600;
                 margin-bottom: 15px;
             }}
             .texto-boasvindas {{
                 color: #64748b;
-                font-size: 15px;
+                font-size: 14px;
             }}
         </style>
         """,
         unsafe_allow_html=True,
     )
 
-    # Menu de Navegação na Barra Lateral
+    # Menu na Barra Lateral
     st.sidebar.title("Navegação")
     menu = st.sidebar.radio(
         "Selecione a Tela:",
@@ -272,26 +277,25 @@ elif st.session_state["tela"] == "sistema":
         ],
     )
 
-    # Lógica de navegação
     if menu == "Sair":
         st.session_state["tela"] = "login"
         st.rerun()
 
     elif menu == "Painel Geral":
-        # Cabeçalho Focado na Venda e no Sonho da Casa Própria
-        st.markdown("<h1 class='titulo-principal'>Sua casa a um passo de você ☀️🔑</h1>", unsafe_allow_html=True)
+        st.markdown("<h1 class='titulo-principal'>Sua casa a um passo de você</h1>", unsafe_allow_html=True)
         st.markdown("<p class='subtitulo-comercial'>Encontre o lar perfeito para criar as melhores memórias com quem você ama.</p>", unsafe_allow_html=True)
-        st.markdown("<p class='texto-boasvindas'>Bem-vindo ao sistema de gestão imobiliária <b>G&G Imóveis</b>.</p>", unsafe_allow_html=True)
+        st.markdown("<p class='texto-boasvindas'>Bem-vindo ao sistema de gestão imobiliária G&G Imóveis.</p>", unsafe_allow_html=True)
 
         st.write("")
-        st.subheader("🏡 Oportunidades e Destaques da Semana")
+        st.subheader("Oportunidades e Destaques da Semana")
 
         col_img1, col_img2, col_img3 = st.columns(3)
 
         # Imóvel 1: Bosque Imperial
         with col_img1:
-            if CAMINHO_BOSQUE and os.path.exists(CAMINHO_BOSQUE):
-                st.image(CAMINHO_BOSQUE, use_container_width=True)
+            img_bosque = carregar_imagem_padronizada(CAMINHO_BOSQUE)
+            if img_bosque:
+                st.image(img_bosque, use_container_width=True)
             st.markdown(
                 """
                 <div class="card-imovel-main">
@@ -305,8 +309,9 @@ elif st.session_state["tela"] == "sistema":
 
         # Imóvel 2: Jardim das Palmeiras
         with col_img2:
-            if CAMINHO_PALMEIRAS and os.path.exists(CAMINHO_PALMEIRAS):
-                st.image(CAMINHO_PALMEIRAS, use_container_width=True)
+            img_palmeiras = carregar_imagem_padronizada(CAMINHO_PALMEIRAS)
+            if img_palmeiras:
+                st.image(img_palmeiras, use_container_width=True)
             st.markdown(
                 """
                 <div class="card-imovel-main">
@@ -320,8 +325,9 @@ elif st.session_state["tela"] == "sistema":
 
         # Imóvel 3: Vista Verde
         with col_img3:
-            if CAMINHO_VISTA and os.path.exists(CAMINHO_VISTA):
-                st.image(CAMINHO_VISTA, use_container_width=True)
+            img_vista = carregar_imagem_padronizada(CAMINHO_VISTA)
+            if img_vista:
+                st.image(img_vista, use_container_width=True)
             st.markdown(
                 """
                 <div class="card-imovel-main">
