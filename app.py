@@ -9,10 +9,16 @@ DIRETORIO_ATUAL = os.path.dirname(os.path.abspath(__file__))
 CAMINHO_LOGO = os.path.join(DIRETORIO_ATUAL, "logo_G&G.png")
 CAMINHO_SIDEBAR = os.path.join(DIRETORIO_ATUAL, "Barra_lateral.png")
 
-# Imagens dos Imóveis
-CAMINHO_BOSQUE = os.path.join(DIRETORIO_ATUAL, "Bosque_imperial.png")
-CAMINHO_PALMEIRAS = os.path.join(DIRETORIO_ATUAL, "jardim das palmeiras.png")
-CAMINHO_VISTA = os.path.join(DIRETORIO_ATUAL, "Vista_verde.png")
+# Função auxiliar para buscar imagem aceitando variações de nome de arquivo
+def buscar_imagem(nome_base):
+    for arquivo in os.listdir(DIRETORIO_ATUAL):
+        if nome_base.lower() in arquivo.lower() and arquivo.endswith((".png", ".jpg", ".jpeg")):
+            return os.path.join(DIRETORIO_ATUAL, arquivo)
+    return ""
+
+CAMINHO_BOSQUE = buscar_imagem("bosque")
+CAMINHO_PALMEIRAS = buscar_imagem("palmeira") or buscar_imagem("jardim")
+CAMINHO_VISTA = buscar_imagem("vista")
 
 LOGO_EXISTE = os.path.exists(CAMINHO_LOGO)
 SIDEBAR_EXISTE = os.path.exists(CAMINHO_SIDEBAR)
@@ -21,7 +27,7 @@ SIDEBAR_EXISTE = os.path.exists(CAMINHO_SIDEBAR)
 @st.cache_data
 def get_image_base64(path):
     """Converte uma imagem local em string Base64 (com cache para performance)."""
-    if os.path.exists(path):
+    if path and os.path.exists(path):
         with open(path, "rb") as image_file:
             encoded_string = base64.b64encode(image_file.read()).decode()
             return f"data:image/png;base64,{encoded_string}"
@@ -69,7 +75,7 @@ if st.session_state["tela"] == "login":
                 st.image(CAMINHO_LOGO, use_container_width=True)
 
         st.markdown(
-            "<h2 style='text-align: center;'>Acesso ao Sistema</h2>",
+            "<h2 style='text-align: center; color: #1e293b;'>Acesso ao Sistema</h2>",
             unsafe_allow_html=True,
         )
         st.write("")
@@ -120,7 +126,7 @@ elif st.session_state["tela"] == "cadastro_inicial":
                 st.image(CAMINHO_LOGO, use_container_width=True)
 
         st.markdown(
-            "<h2 style='text-align: center;'>Cadastro de Novo Cliente</h2>",
+            "<h2 style='text-align: center; color: #1e293b;'>Cadastro de Novo Cliente</h2>",
             unsafe_allow_html=True,
         )
         st.write("")
@@ -169,10 +175,16 @@ elif st.session_state["tela"] == "cadastro_inicial":
 elif st.session_state["tela"] == "sistema":
     sidebar_bg = get_image_base64(CAMINHO_SIDEBAR)
 
-    # Estilização CSS para o fundo da navegação e cards
+    # Estilização CSS: Tema Claro, Solar, Familiar e Acolhedor
     st.markdown(
         f"""
         <style>
+            /* Fundo principal mais claro e limpo */
+            .stApp {{
+                background-color: #f8fafc;
+                color: #1e293b;
+            }}
+            
             [data-testid="stSidebar"] {{
                 background-image: url("{sidebar_bg}");
                 background-size: cover;
@@ -186,41 +198,61 @@ elif st.session_state["tela"] == "sistema":
                 background-color: transparent !important;
                 padding-top: 0rem !important;
             }}
-            /* Espaçamento superior mantido para não cobrir a logomarca */
             [data-testid="stSidebarUserContent"] {{
                 margin-top: 280px !important;
                 background-color: transparent !important;
                 padding: 1rem !important;
             }}
-            /* Sombra nas letras para garantir boa leitura sobre a imagem */
             [data-testid="stSidebar"] *, [data-testid="stSidebar"] p, [data-testid="stSidebar"] span {{
                 color: #FFFFFF !important;
                 text-shadow: 2px 2px 4px rgba(0,0,0,0.9);
             }}
 
-            /* Estilo dos cartões de imóveis na área principal */
+            /* Estilo dos Cards em Tom Claro com Sombra Suave */
             .card-imovel-main {{
-                background-color: #1e222d;
-                border-bottom: 4px solid #00d26a;
-                padding: 18px;
-                border-radius: 0 0 8px 8px;
+                background-color: #ffffff;
+                border-radius: 0 0 12px 12px;
+                padding: 20px;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+                border: 1px solid #e2e8f0;
+                border-top: none;
                 margin-top: -10px;
+                transition: transform 0.2s ease;
             }}
             .card-imovel-main h3 {{
                 margin: 0 0 8px 0;
-                color: #ffffff;
-                font-size: 16px;
+                color: #0f172a;
+                font-size: 18px;
+                font-weight: 700;
             }}
             .card-imovel-main p {{
-                margin: 4px 0;
-                color: #b0b8c4;
-                font-size: 13px;
+                margin: 6px 0;
+                color: #64748b;
+                font-size: 14px;
             }}
             .card-imovel-main .valor {{
-                color: #00d26a;
+                color: #d97706; /* Dourado / Laranja Quente */
                 font-weight: bold;
+                font-size: 16px;
+                margin-top: 12px;
+            }}
+            
+            /* Título Comercial */
+            .titulo-principal {{
+                color: #0f172a;
+                font-size: 32px;
+                font-weight: 800;
+                margin-bottom: 2px;
+            }}
+            .subtitulo-comercial {{
+                color: #0284c7; /* Azul Mar / Verão */
+                font-size: 20px;
+                font-weight: 600;
+                margin-bottom: 15px;
+            }}
+            .texto-boasvindas {{
+                color: #64748b;
                 font-size: 15px;
-                margin-top: 10px;
             }}
         </style>
         """,
@@ -246,23 +278,25 @@ elif st.session_state["tela"] == "sistema":
         st.rerun()
 
     elif menu == "Painel Geral":
-        st.title("Painel Geral G&G Imóveis")
-        st.write("Bem-vindo ao sistema de gestão imobiliária!")
+        # Cabeçalho Focado na Venda e no Sonho da Casa Própria
+        st.markdown("<h1 class='titulo-principal'>Sua casa a um passo de você ☀️🔑</h1>", unsafe_allow_html=True)
+        st.markdown("<p class='subtitulo-comercial'>Encontre o lar perfeito para criar as melhores memórias com quem você ama.</p>", unsafe_allow_html=True)
+        st.markdown("<p class='texto-boasvindas'>Bem-vindo ao sistema de gestão imobiliária <b>G&G Imóveis</b>.</p>", unsafe_allow_html=True)
 
         st.write("")
-        st.subheader("🏢 Imóveis em Destaque")
+        st.subheader("🏡 Oportunidades e Destaques da Semana")
 
         col_img1, col_img2, col_img3 = st.columns(3)
 
         # Imóvel 1: Bosque Imperial
         with col_img1:
-            if os.path.exists(CAMINHO_BOSQUE):
+            if CAMINHO_BOSQUE and os.path.exists(CAMINHO_BOSQUE):
                 st.image(CAMINHO_BOSQUE, use_container_width=True)
             st.markdown(
                 """
                 <div class="card-imovel-main">
                     <h3>Residencial Bosque Imperial</h3>
-                    <p><i>Conforto, segurança e qualidade de vida.</i></p>
+                    <p><i>Conforto, segurança e área de lazer completa para a família.</i></p>
                     <p class="valor">Valores a partir de R$ 350 mil</p>
                 </div>
                 """,
@@ -271,13 +305,13 @@ elif st.session_state["tela"] == "sistema":
 
         # Imóvel 2: Jardim das Palmeiras
         with col_img2:
-            if os.path.exists(CAMINHO_PALMEIRAS):
+            if CAMINHO_PALMEIRAS and os.path.exists(CAMINHO_PALMEIRAS):
                 st.image(CAMINHO_PALMEIRAS, use_container_width=True)
             st.markdown(
                 """
                 <div class="card-imovel-main">
                     <h3>Condomínio Jardim das Palmeiras</h3>
-                    <p><i>O lugar ideal para viver seus melhores momentos.</i></p>
+                    <p><i>O lugar ideal para viver seus melhores momentos ao ar livre.</i></p>
                     <p class="valor">Valores a partir de R$ 220 mil</p>
                 </div>
                 """,
@@ -286,13 +320,13 @@ elif st.session_state["tela"] == "sistema":
 
         # Imóvel 3: Vista Verde
         with col_img3:
-            if os.path.exists(CAMINHO_VISTA):
+            if CAMINHO_VISTA and os.path.exists(CAMINHO_VISTA):
                 st.image(CAMINHO_VISTA, use_container_width=True)
             st.markdown(
                 """
                 <div class="card-imovel-main">
                     <h3>Residencial Vista Verde</h3>
-                    <p><i>Seu novo lar cercado de tranquilidade.</i></p>
+                    <p><i>Seu novo lar cercado de tranquilidade e natureza.</i></p>
                     <p class="valor">Valores a partir de R$ 185 mil</p>
                 </div>
                 """,
@@ -316,8 +350,8 @@ elif st.session_state["tela"] == "sistema":
             st.success(f"Corretor {nome_corr} cadastrado com sucesso!")
 
     elif menu == "Simulação":
-        st.title("Simulação Financiamento / Venda")
-        st.write("Calcule a estimativa de parcelas ou valores do imóvel:")
+        st.title("Simulação de Financiamento")
+        st.write("Calcule a estimativa de parcelas para o seu cliente:")
         valor_imovel = st.number_input("Valor do Imóvel (R$)", value=300000)
         entrada = st.number_input("Valor da Entrada (R$)", value=60000)
         parcelas = st.slider("Número de Parcelas (Meses)", 12, 420, 360)
@@ -327,6 +361,5 @@ elif st.session_state["tela"] == "sistema":
             parcela_estimada = saldo_devedor / parcelas
             st.info(f"Valor a financiar: R$ {saldo_devedor:,.2f}")
             st.success(f"Valor estimado da parcela simples: R$ {parcela_estimada:,.2f}")
-
 
             
