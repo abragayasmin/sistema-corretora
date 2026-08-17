@@ -442,7 +442,6 @@ elif st.session_state["tela"] == "sistema":
         st.title("Simulação de Financiamento")
         st.write("Calcule a estimativa de financiamento para o cliente:")
 
-        # Mapeamento dos imóveis e seus respectivos valores numéricos
         imoveis_opcoes = {
             "Residencial Bosque Imperial - R$ 350.000,00": 350000.0,
             "Condomínio Jardim das Palmeiras - R$ 220.000,00": 220000.0,
@@ -454,17 +453,33 @@ elif st.session_state["tela"] == "sistema":
             options=list(imoveis_opcoes.keys())
         )
         
-        # Puxa apenas o valor do imóvel selecionado
         valor_imovel = imoveis_opcoes[imovel_selecionado]
-
         entrada = st.number_input("Valor da Entrada (R$)", value=50000.0, step=5000.0)
 
         if st.button("Simular Financiamento"):
-            if entrada >= valor_imovel:
-                st.error("O valor da entrada não pode ser igual ou superior ao valor do imóvel.")
+            if entrada > valor_imovel:
+                st.error("O valor da entrada não pode ser maior que o valor total do imóvel.")
             else:
-                saldo_devedor = valor_imovel - entrada
-                st.info(f"**Valor do Imóvel Selecionado:** R$ {valor_imovel:,.2f}")
-                st.success(f"**Saldo a Financiar (Valor do Imóvel - Entrada):** R$ {saldo_devedor:,.2f}")
+                # Cálculo da porcentagem da entrada fornecida
+                porcentagem_entrada = (entrada / valor_imovel) * 100
 
+                # Definição do subsídio com base nas faixas de entrada
+                if porcentagem_entrada >= 100:
+                    pct_subsidio = 0.35  # 35% À vista
+                elif porcentagem_entrada > 50:
+                    pct_subsidio = 0.20  # 20%
+                elif porcentagem_entrada > 45:
+                    pct_subsidio = 0.12  # 12%
+                elif porcentagem_entrada > 20:
+                    pct_subsidio = 0.07  # 7%
+                else:
+                    pct_subsidio = 0.02  # 2%
+
+                valor_subsidio = valor_imovel * pct_subsidio
+                saldo_devedor = valor_imovel - entrada - valor_subsidio
+                saldo_devedor_exibir = max(0.0, saldo_devedor)
+
+                st.info(f"**Valor do Imóvel Selecionado:** R$ {valor_imovel:,.2f}")
+                st.warning(f"**Subsídio Concedido ({pct_subsidio * 100:.0f}%):** R$ {valor_subsidio:,.2f}")
+                st.success(f"**Saldo Final a Financiar:** R$ {saldo_devedor_exibir:,.2f}")
                 
