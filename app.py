@@ -9,12 +9,18 @@ DIRETORIO_ATUAL = os.path.dirname(os.path.abspath(__file__))
 CAMINHO_LOGO = os.path.join(DIRETORIO_ATUAL, "logo_G&G.png")
 CAMINHO_SIDEBAR = os.path.join(DIRETORIO_ATUAL, "Barra_lateral.png")
 
+# Imagens dos Imóveis
+CAMINHO_BOSQUE = os.path.join(DIRETORIO_ATUAL, "Bosque_imperial.png")
+CAMINHO_PALMEIRAS = os.path.join(DIRETORIO_ATUAL, "jardim das palmeiras.png")
+CAMINHO_VISTA = os.path.join(DIRETORIO_ATUAL, "Vista_verde.png")
+
 LOGO_EXISTE = os.path.exists(CAMINHO_LOGO)
 SIDEBAR_EXISTE = os.path.exists(CAMINHO_SIDEBAR)
 
 
+@st.cache_data
 def get_image_base64(path):
-    """Converte uma imagem local em string Base64."""
+    """Converte uma imagem local em string Base64 (com cache para performance)."""
     if os.path.exists(path):
         with open(path, "rb") as image_file:
             encoded_string = base64.b64encode(image_file.read()).decode()
@@ -33,8 +39,8 @@ def validar_senha(senha: str) -> bool:
 
 # --- 1. CONFIGURAÇÃO INICIAL DA PÁGINA ---
 st.set_page_config(
-    page_title="Sistema Corretora",
-    page_icon=CAMINHO_LOGO if LOGO_EXISTE else "📈",
+    page_title="G&G Imóveis",
+    page_icon=CAMINHO_LOGO if LOGO_EXISTE else "🏠",
     layout="wide",
 )
 
@@ -163,7 +169,7 @@ elif st.session_state["tela"] == "cadastro_inicial":
 elif st.session_state["tela"] == "sistema":
     sidebar_bg = get_image_base64(CAMINHO_SIDEBAR)
 
-    # Estilização CSS para remover totalmente o fundo escuro da navegação
+    # Estilização CSS para o fundo da navegação e cards
     st.markdown(
         f"""
         <style>
@@ -183,7 +189,7 @@ elif st.session_state["tela"] == "sistema":
             /* Espaçamento superior mantido para não cobrir a logomarca */
             [data-testid="stSidebarUserContent"] {{
                 margin-top: 280px !important;
-                background-color: transparent !important; /* Totalmente transparente */
+                background-color: transparent !important;
                 padding: 1rem !important;
             }}
             /* Sombra nas letras para garantir boa leitura sobre a imagem */
@@ -193,19 +199,12 @@ elif st.session_state["tela"] == "sistema":
             }}
 
             /* Estilo dos cartões de imóveis na área principal */
-            .card-container {{
-                display: flex;
-                gap: 20px;
-                margin-top: 20px;
-                flex-wrap: wrap;
-            }}
             .card-imovel-main {{
                 background-color: #1e222d;
-                border-top: 4px solid #00d26a;
+                border-bottom: 4px solid #00d26a;
                 padding: 18px;
-                border-radius: 8px;
-                flex: 1;
-                min-width: 250px;
+                border-radius: 0 0 8px 8px;
+                margin-top: -10px;
             }}
             .card-imovel-main h3 {{
                 margin: 0 0 8px 0;
@@ -234,13 +233,9 @@ elif st.session_state["tela"] == "sistema":
         "Selecione a Tela:",
         [
             "Painel Geral",
-            "Cadastrar Cliente",
-            "Cadastrar Ativo",
-            "Registrar Transação",
-            "Consultar Clientes",
-            "Consultar Ativos",
-            "Consultar Transações",
-            "Relatório Financeiro",
+            "Cadastro de Cliente",
+            "Cadastro de Corretor",
+            "Simulação",
             "Sair",
         ],
     )
@@ -249,44 +244,89 @@ elif st.session_state["tela"] == "sistema":
     if menu == "Sair":
         st.session_state["tela"] = "login"
         st.rerun()
+
     elif menu == "Painel Geral":
-        st.title("Painel Geral da Corretora")
-        st.write("Bem-vindo ao sistema de gestão de ativos e clientes!")
+        st.title("Painel Geral G&G Imóveis")
+        st.write("Bem-vindo ao sistema de gestão imobiliária!")
 
         st.write("")
         st.subheader("🏢 Imóveis em Destaque")
 
-        # Exibe os imóveis logo abaixo do título do Painel Geral
-        st.markdown(
-            """
-            <div class="card-container">
+        col_img1, col_img2, col_img3 = st.columns(3)
+
+        # Imóvel 1: Bosque Imperial
+        with col_img1:
+            if os.path.exists(CAMINHO_BOSQUE):
+                st.image(CAMINHO_BOSQUE, use_container_width=True)
+            st.markdown(
+                """
                 <div class="card-imovel-main">
                     <h3>Residencial Bosque Imperial</h3>
                     <p><i>Conforto, segurança e qualidade de vida.</i></p>
                     <p class="valor">Valores a partir de R$ 350 mil</p>
                 </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+        # Imóvel 2: Jardim das Palmeiras
+        with col_img2:
+            if os.path.exists(CAMINHO_PALMEIRAS):
+                st.image(CAMINHO_PALMEIRAS, use_container_width=True)
+            st.markdown(
+                """
                 <div class="card-imovel-main">
                     <h3>Condomínio Jardim das Palmeiras</h3>
                     <p><i>O lugar ideal para viver seus melhores momentos.</i></p>
                     <p class="valor">Valores a partir de R$ 220 mil</p>
                 </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+        # Imóvel 3: Vista Verde
+        with col_img3:
+            if os.path.exists(CAMINHO_VISTA):
+                st.image(CAMINHO_VISTA, use_container_width=True)
+            st.markdown(
+                """
                 <div class="card-imovel-main">
                     <h3>Residencial Vista Verde</h3>
                     <p><i>Seu novo lar cercado de tranquilidade.</i></p>
                     <p class="valor">Valores a partir de R$ 185 mil</p>
                 </div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+                """,
+                unsafe_allow_html=True,
+            )
 
-    elif menu == "Cadastrar Cliente":
-        st.title("Cadastro de Clientes")
-        nome_cli = st.text_input("Nome Completo")
+    elif menu == "Cadastro de Cliente":
+        st.title("Cadastro de Cliente")
+        nome_cli = st.text_input("Nome Completo do Cliente")
         cpf_cli = st.text_input("CPF")
+        email_cli = st.text_input("E-mail")
         if st.button("Salvar Cliente"):
             st.success(f"Cliente {nome_cli} cadastrado com sucesso!")
-    else:
-        st.title(menu)
-        st.write(f"Conteúdo da tela de **{menu}** em desenvolvimento.")
-        
+
+    elif menu == "Cadastro de Corretor":
+        st.title("Cadastro de Corretor")
+        nome_corr = st.text_input("Nome Completo do Corretor")
+        creci = st.text_input("Número do CRECI")
+        telefone_corr = st.text_input("Telefone/WhatsApp")
+        if st.button("Salvar Corretor"):
+            st.success(f"Corretor {nome_corr} cadastrado com sucesso!")
+
+    elif menu == "Simulação":
+        st.title("Simulação Financiamento / Venda")
+        st.write("Calcule a estimativa de parcelas ou valores do imóvel:")
+        valor_imovel = st.number_input("Valor do Imóvel (R$)", value=300000)
+        entrada = st.number_input("Valor da Entrada (R$)", value=60000)
+        parcelas = st.slider("Número de Parcelas (Meses)", 12, 420, 360)
+
+        if st.button("Simular"):
+            saldo_devedor = valor_imovel - entrada
+            parcela_estimada = saldo_devedor / parcelas
+            st.info(f"Valor a financiar: R$ {saldo_devedor:,.2f}")
+            st.success(f"Valor estimado da parcela simples: R$ {parcela_estimada:,.2f}")
+
+
+            
