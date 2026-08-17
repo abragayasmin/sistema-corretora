@@ -67,7 +67,7 @@ if "banco_clientes" not in st.session_state:
             "email": "cliente@email.com",
             "telefone": "(82) 99999-9999",
             "nascimento": "1990-01-01",
-            "renda": 5000.0,
+            "renda": 3000.0,
             "senha": "Senha@123"
         }
     }
@@ -168,9 +168,9 @@ elif st.session_state["tela"] == "cadastro_inicial":
             
             c1, c2 = st.columns(2)
             with c1:
-                data_nasc = st.date_input("Data de Nascimento")
+                renda = st.number_input("Renda Mensal (R$)", min_value=0.0, step=500.0)
             with c2:
-                renda = st.number_input("Renda Familiar Mensal (R$)", min_value=0.0, step=500.0)
+                data_nasc = st.date_input("Data de Nascimento")
 
             senha = st.text_input("Senha", type="password", placeholder="Crie uma senha")
             confirmar_senha = st.text_input("Confirmar Senha", type="password", placeholder="Repita a senha")
@@ -292,6 +292,15 @@ elif st.session_state["tela"] == "sistema":
                 color: #64748b;
                 font-size: 14px;
             }}
+            .bloco-resultado-escuro {{
+                background-color: #262730;
+                color: #ffffff;
+                padding: 16px 20px;
+                border-radius: 8px;
+                margin-bottom: 12px;
+                font-size: 15px;
+                font-weight: 500;
+            }}
         </style>
         """,
         unsafe_allow_html=True,
@@ -384,7 +393,7 @@ elif st.session_state["tela"] == "sistema":
             
             c1, c2 = st.columns(2)
             with c1:
-                renda_cli = st.number_input("Renda Familiar Mensal (R$)", value=float(dados_atuais.get("renda", 0.0)), step=500.0)
+                renda_cli = st.number_input("Renda Mensal (R$)", value=float(dados_atuais.get("renda", 0.0)), step=500.0)
             with c2:
                 nasc_cli = st.text_input("Data de Nascimento", value=dados_atuais.get("nascimento", ""))
 
@@ -442,6 +451,8 @@ elif st.session_state["tela"] == "sistema":
         st.title("Simulação de Financiamento")
         st.write("Calcule a estimativa de financiamento para o cliente:")
 
+        cpf_simulacao = st.text_input("Informe o CPF do Cliente Cadastrado:", placeholder="Digite apenas números")
+
         imoveis_opcoes = {
             "Residencial Bosque Imperial - R$ 350.000,00": 350000.0,
             "Condomínio Jardim das Palmeiras - R$ 220.000,00": 220000.0,
@@ -457,29 +468,69 @@ elif st.session_state["tela"] == "sistema":
         entrada = st.number_input("Valor da Entrada (R$)", value=50000.0, step=5000.0)
 
         if st.button("Simular Financiamento"):
-            if entrada > valor_imovel:
+            cpf_limpo = re.sub(r"\D", "", cpf_simulacao)
+
+            if not cpf_limpo:
+                st.error("É necessário informar o CPF do cliente para realizar a simulação.")
+            elif cpf_limpo not in st.session_state["banco_clientes"]:
+                st.error("CPF não localizado no cadastro. Por favor, cadastre o cliente antes de simular.")
+            elif entrada > valor_imovel:
                 st.error("O valor da entrada não pode ser maior que o valor total do imóvel.")
             else:
-                # Cálculo da porcentagem da entrada fornecida
+                cliente = st.session_state["banco_clientes"][cpf_limpo]
+                renda_cliente = cliente.get("renda", 0.0)
+
+                salario_minimo = 1518.0
+                qtd_salarios = renda_cliente / salario_minimo if salario_minimo > 0 else 0
+
+                if qtd_salarios <= 1:
+                    taxa_juros_mensal = 0.5
+                elif qtd_salarios <= 2:
+                    taxa_juros_mensal = 1.0
+                elif qtd_salarios <= 3:
+                    taxa_juros_mensal = 2.0
+                elif qtd_salarios <= 4:
+                    taxa_juros_mensal = 4.0
+                else:
+                    taxa_juros_mensal = 6.0
+
+                taxa_juros_anual = taxa_juros_mensal * 12
+
                 porcentagem_entrada = (entrada / valor_imovel) * 100
 
-                # Definição do subsídio com base nas faixas de entrada
                 if porcentagem_entrada >= 100:
-                    pct_subsidio = 0.35  # 35% À vista
+                    pct_subsidio = 0.35
                 elif porcentagem_entrada > 50:
-                    pct_subsidio = 0.20  # 20%
+                    pct_subsidio = 0.20
                 elif porcentagem_entrada > 45:
-                    pct_subsidio = 0.12  # 12%
+                    pct_subsidio = 0.12
                 elif porcentagem_entrada > 20:
-                    pct_subsidio = 0.07  # 7%
+                    pct_subsidio = 0.07
                 else:
-                    pct_subsidio = 0.02  # 2%
+                    pct_subsidio = 0.02
 
                 valor_subsidio = valor_imovel * pct_subsidio
                 saldo_devedor = valor_imovel - entrada - valor_subsidio
                 saldo_devedor_exibir = max(0.0, saldo_devedor)
 
-                st.info(f"**Valor do Imóvel Selecionado:** R$ {valor_imovel:,.2f}")
-                st.warning(f"**Subsídio Concedido ({pct_subsidio * 100:.0f}%):** R$ {valor_subsidio:,.2f}")
-                st.success(f"**Saldo Final a Financiar:** R$ {saldo_devedor_exibir:,.2f}")
+                st.markdown(
+                    f"""
+                    <div class="bloco-resultado-escuro">
+                        Cliente: {cliente.get('nome')} | Renda Mensal: R$ {renda_cliente:,.2f} ({qtd_salarios:.1f} SM)
+                    </div>
+                    <div class="bloco-resultado-escuro">
+                        Taxa de Juros Aplicada: {taxa_juros_mensal:.1f}% ao mês ({taxa_juros_anual:.1f}% ao ano)
+                    </div>
+                    <div class="bloco-resultado-escuro">
+                        Valor do Imóvel Selecionado: R$ {valor_imovel:,.2f}
+                    </div>
+                    <div class="bloco-resultado-escuro">
+                        Subsídio Concedido ({pct_subsidio * 100:.0f}%): R$ {valor_subsidio:,.2f}
+                    </div>
+                    <div class="bloco-resultado-escuro">
+                        Saldo Final a Financiar: R$ {saldo_devedor_exibir:,.2f}
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
                 
