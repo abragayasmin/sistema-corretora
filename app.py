@@ -58,10 +58,11 @@ def validar_senha(senha: str) -> bool:
     return tem_maiuscula and tem_especial
 
 
-# --- BANCO DE DADOS EM MEMÓRIA ---
+# --- BANCO DE DADOS GLOBAL ATRELADO AO CPF ---
 if "banco_clientes" not in st.session_state:
     st.session_state["banco_clientes"] = {
         "12345678900": {
+            "cpf": "12345678900",
             "nome": "Cliente Exemplo",
             "email": "cliente@email.com",
             "telefone": "(82) 99999-9999",
@@ -187,7 +188,9 @@ elif st.session_state["tela"] == "cadastro_inicial":
             elif senha != confirmar_senha:
                 st.error("As senhas digitadas não coincidem.")
             else:
+                # Salva o cliente estruturado pelo CPF
                 st.session_state["banco_clientes"][cpf_limpo] = {
+                    "cpf": cpf_limpo,
                     "nome": nome,
                     "email": email,
                     "telefone": telefone,
@@ -208,7 +211,6 @@ elif st.session_state["tela"] == "cadastro_inicial":
 elif st.session_state["tela"] == "sistema":
     sidebar_bg = get_image_base64(CAMINHO_SIDEBAR)
 
-    # Estilização CSS Corrigida: Força rótulos de formulário visíveis
     st.markdown(
         f"""
         <style>
@@ -219,14 +221,11 @@ elif st.session_state["tela"] == "sistema":
                 background-color: #f8fafc;
                 color: #0f172a;
             }}
-            
-            /* CORREÇÃO DAS LEGENDAS DOS FORMULÁRIOS */
             label, [data-testid="stWidgetLabel"] p {{
                 color: #0f172a !important;
                 font-weight: 600 !important;
                 font-size: 15px !important;
             }}
-            
             [data-testid="stSidebar"] {{
                 background-image: url("{sidebar_bg}");
                 background-size: cover;
@@ -369,36 +368,49 @@ elif st.session_state["tela"] == "sistema":
             )
 
     elif menu == "Cadastro de Cliente":
-        st.title("Cadastro e Dados do Cliente")
-        st.write("Consulte ou atualize a ficha cadastral do cliente no sistema.")
+        st.title("Cadastro e Ficha do Cliente")
+        st.write("Preencha ou atualize os dados primordiais do cliente no sistema.")
 
         cpf_atual = st.session_state.get("usuario_logado", "")
         dados_atuais = st.session_state["banco_clientes"].get(cpf_atual, {})
 
         with st.form("form_atualizar_cliente"):
             nome_cli = st.text_input("Nome Completo", value=dados_atuais.get("nome", ""))
-            cpf_cli = st.text_input("CPF (Não editável)", value=cpf_atual, disabled=True)
+            cpf_cli = st.text_input("CPF do Cliente", value=dados_atuais.get("cpf", cpf_atual), placeholder="Digite apenas os números")
             email_cli = st.text_input("E-mail", value=dados_atuais.get("email", ""))
             tel_cli = st.text_input("Telefone / WhatsApp", value=dados_atuais.get("telefone", ""))
             
             c1, c2 = st.columns(2)
             with c1:
-                renda_cli = st.number_input("Renda Familiar Mensal (R$)", value=float(dados_atuais.get("renda", 0.0)))
+                renda_cli = st.number_input("Renda Familiar Mensal (R$)", value=float(dados_atuais.get("renda", 0.0)), step=500.0)
             with c2:
                 nasc_cli = st.text_input("Data de Nascimento", value=dados_atuais.get("nascimento", ""))
 
-            btn_salvar = st.form_submit_button("Atualizar Ficha Cadastral")
+            btn_salvar = st.form_submit_button("Salvar Ficha do Cliente")
 
         if btn_salvar:
-            if cpf_atual in st.session_state["banco_clientes"]:
-                st.session_state["banco_clientes"][cpf_atual].update({
+            cpf_novo_limpo = re.sub(r"\D", "", cpf_cli)
+            
+            if not cpf_novo_limpo or not nome_cli or not email_cli:
+                st.error("Preencha ao menos Nome, CPF e E-mail.")
+            else:
+                # Salva a variável do cliente indexada ao CPF digitado
+                st.session_state["banco_clientes"][cpf_novo_limpo] = {
+                    "cpf": cpf_novo_limpo,
                     "nome": nome_cli,
                     "email": email_cli,
                     "telefone": tel_cli,
                     "renda": renda_cli,
-                    "nascimento": nasc_cli
-                })
-                st.success("Dados cadastrais atualizados com sucesso!")
+                    "nascimento": nasc_cli,
+                    "senha": dados_atuais.get("senha", "Senha@123")
+                }
+                
+                # Se o CPF tiver sido alterado, remove o registro antigo
+                if cpf_atual and cpf_atual != cpf_novo_limpo and cpf_atual in st.session_state["banco_clientes"]:
+                    del st.session_state["banco_clientes"][cpf_atual]
+                    st.session_state["usuario_logado"] = cpf_novo_limpo
+                    
+                st.success(f"Ficha do cliente registrada com sucesso e atrelada ao CPF {cpf_novo_limpo}!")
 
     elif menu == "Cadastro de Corretor":
         st.title("Cadastro de Corretor")
@@ -420,4 +432,5 @@ elif st.session_state["tela"] == "sistema":
             parcela_estimada = saldo_devedor / parcelas
             st.info(f"Valor a financiar: R$ {saldo_devedor:,.2f}")
             st.success(f"Valor estimado da parcela simples: R$ {parcela_estimada:,.2f}")
+
             
