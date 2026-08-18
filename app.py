@@ -33,7 +33,6 @@ def carregar_clientes_disco():
                 return json.load(f)
         except Exception:
             pass
-    # Cliente padrão inicial se o arquivo não existir
     return {
         "12345678900": {
             "cpf": "12345678900",
@@ -51,7 +50,6 @@ def salvar_cliente_disco(cpf, dados_cliente):
     clientes[cpf] = dados_cliente
     with open(ARQUIVO_BANCO_CLIENTES, "w", encoding="utf-8") as f:
         json.dump(clientes, f, ensure_ascii=False, indent=4)
-    # Atualiza a memória da sessão
     st.session_state["banco_clientes"] = clientes
 
 
@@ -166,13 +164,14 @@ st.markdown(
             display: none !important;
         }}
 
-        /* Aplica o card branco apenas nas colunas do painel principal (imóveis) */
-        .card-imovel > div {{
+        /* Estilo do Card Branco para os Imóveis */
+        .card-imovel {{
             background-color: {card_bg} !important;
             padding: 20px;
-            border-radius: 12px;
+            border-radius: 16px;
             border: {card_border};
-            box-shadow: {"0px 4px 12px rgba(0, 0, 0, 0.05)" if not eh_tela_inicial else "none"};
+            box-shadow: {"0px 4px 16px rgba(0, 0, 0, 0.06)" if not eh_tela_inicial else "none"};
+            height: 100%;
         }}
 
         input {{
@@ -353,38 +352,48 @@ elif st.session_state["etapa_fluxo"] == "painel_geral":
     col_img1, col_img2, col_img3 = st.columns(3)
 
     with col_img1:
-        st.markdown('<div class="card-imovel">', unsafe_allow_html=True)
         img_bosque = carregar_imagem_padronizada(CAMINHO_BOSQUE)
-        if img_bosque:
-            st.image(img_bosque, use_container_width=True)
-        st.markdown("<h4>Residencial Bosque Imperial</h4>", unsafe_allow_html=True)
-        st.markdown("<p class='subtitulo-cinza'><i>Conforto, segurança e área de lazer completa para a família.</i></p>", unsafe_allow_html=True)
-        st.markdown("<p style='color: #C27803 !important; font-weight: bold;'>Valores a partir de R$ 350 mil</p>", unsafe_allow_html=True)
-        st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown(
+            f"""
+            <div class="card-imovel">
+                {"<img src='" + get_image_base64(CAMINHO_BOSQUE) + "' style='width:100%; border-radius:8px; margin-bottom:12px;' />" if CAMINHO_BOSQUE else ""}
+                <h4 style="margin-top:0;">Residencial Bosque Imperial</h4>
+                <p class='subtitulo-cinza'><i>Conforto, segurança e área de lazer completa para a família.</i></p>
+                <p style='color: #C27803 !important; font-weight: bold; margin-bottom:0;'>Valores a partir de R$ 350 mil</p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
     with col_img2:
-        st.markdown('<div class="card-imovel">', unsafe_allow_html=True)
-        img_palmeiras = carregar_imagem_padronizada(CAMINHO_PALMEIRAS)
-        if img_palmeiras:
-            st.image(img_palmeiras, use_container_width=True)
-        st.markdown("<h4>Condomínio Jardim das Palmeiras</h4>", unsafe_allow_html=True)
-        st.markdown("<p class='subtitulo-cinza'><i>O lugar ideal para viver seus melhores momentos ao ar livre.</i></p>", unsafe_allow_html=True)
-        st.markdown("<p style='color: #C27803 !important; font-weight: bold;'>Valores a partir de R$ 220 mil</p>", unsafe_allow_html=True)
-        st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown(
+            f"""
+            <div class="card-imovel">
+                {"<img src='" + get_image_base64(CAMINHO_PALMEIRAS) + "' style='width:100%; border-radius:8px; margin-bottom:12px;' />" if CAMINHO_PALMEIRAS else ""}
+                <h4 style="margin-top:0;">Condomínio Jardim das Palmeiras</h4>
+                <p class='subtitulo-cinza'><i>O lugar ideal para viver seus melhores momentos ao ar livre.</i></p>
+                <p style='color: #C27803 !important; font-weight: bold; margin-bottom:0;'>Valores a partir de R$ 220 mil</p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
     with col_img3:
-        st.markdown('<div class="card-imovel">', unsafe_allow_html=True)
-        img_vista = carregar_imagem_padronizada(CAMINHO_VISTA)
-        if img_vista:
-            st.image(img_vista, use_container_width=True)
-        st.markdown("<h4>Residencial Vista Verde</h4>", unsafe_allow_html=True)
-        st.markdown("<p class='subtitulo-cinza'><i>Seu novo lar cercado de tranquilidade e natureza.</i></p>", unsafe_allow_html=True)
-        st.markdown("<p style='color: #C27803 !important; font-weight: bold;'>Valores a partir de R$ 185 mil</p>", unsafe_allow_html=True)
-        st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown(
+            f"""
+            <div class="card-imovel">
+                {"<img src='" + get_image_base64(CAMINHO_VISTA) + "' style='width:100%; border-radius:8px; margin-bottom:12px;' />" if CAMINHO_VISTA else ""}
+                <h4 style="margin-top:0;">Residencial Vista Verde</h4>
+                <p class='subtitulo-cinza'><i>Seu novo lar cercado de tranquilidade e natureza.</i></p>
+                <p style='color: #C27803 !important; font-weight: bold; margin-bottom:0;'>Valores a partir de R$ 185 mil</p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
     st.write("")
     
-    # 3 colunas sem classe 'card-imovel' para o botão ficar solto no fundo cinza e no tamanho exato do card
+    # Botão posicionado na direita (3ª coluna) e solto sobre o fundo cinza
     c_vazio1, c_vazio2, c_botao = st.columns(3)
     with c_botao:
         if st.button("Simule sua entrada", key="btn_simular_geral", use_container_width=True):
