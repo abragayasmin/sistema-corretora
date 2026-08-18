@@ -93,7 +93,7 @@ st.set_page_config(
 sidebar_bg_base64 = get_image_base64(CAMINHO_SIDEBAR)
 eh_tela_inicial = st.session_state["etapa_fluxo"] in ["login", "cadastro_inicial"]
 
-# Definições de cores dinâmicas baseadas na tela atual
+# Definições de cores dinâmicas
 if eh_tela_inicial:
     bg_app = "#0E1726"
     text_color = "#FFFFFF"
@@ -102,15 +102,17 @@ if eh_tela_inicial:
     sub_color = "#A0AEC0"
     btn_bg = "#2B6CB0"
     btn_hover = "#3182CE"
+    btn_text_color = "#FFFFFF"
 else:
-    # Tema claro / veraneio para o Painel Geral e Simulação
+    # Tema claro / veraneio para o Painel Geral
     bg_app = "#F8F9FA"
     text_color = "#0E1D2F"
     card_bg = "#FFFFFF"
     card_border = "none"
     sub_color = "#556070"
-    btn_bg = "#0E1D2F"
-    btn_hover = "#1A2E47"
+    btn_bg = "#FF9F1C"        # Amarelo/Laranja vibrante Verão
+    btn_hover = "#FF8800"     # Laranja ligeiramente mais escuro no hover
+    btn_text_color = "#FFFFFF"
 
 # Estilização CSS Dinâmica
 st.markdown(
@@ -131,15 +133,15 @@ st.markdown(
             color: {sub_color} !important;
         }}
 
-        /* Oculta ou Exibe a Barra Lateral */
+        /* Ajuste Fino da Barra Lateral para Mostrar a Logo Completa */
         [data-testid="stSidebar"] {{
             display: {"none" if eh_tela_inicial else "block"} !important;
             background-image: url("{sidebar_bg_base64}");
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            min-width: 280px !important;
-            max-width: 280px !important;
+            background-size: 100% 100% !important;
+            background-position: top center !important;
+            background-repeat: no-repeat !important;
+            min-width: 320px !important;
+            max-width: 320px !important;
         }}
         
         [data-testid="stSidebarCollapseButton"] {{
@@ -167,17 +169,19 @@ st.markdown(
             color: {sub_color} !important;
         }}
 
-        /* Botões */
+        /* Botões Estilizados */
         .stButton>button, button[data-testid="stFormSubmitButton"] {{
             background-color: {btn_bg} !important;
-            color: #FFFFFF !important;
+            color: {btn_text_color} !important;
             border-radius: 8px !important;
             border: none !important;
-            font-weight: 600 !important;
+            font-weight: bold !important;
+            font-size: 1rem !important;
         }}
         
         .stButton>button:hover, button[data-testid="stFormSubmitButton"]:hover {{
             background-color: {btn_hover} !important;
+            color: #FFFFFF !important;
         }}
     </style>
     """,
@@ -497,6 +501,4 @@ elif st.session_state["etapa_fluxo"] == "passo3_simulacao":
     if st.button("← Voltar ao Painel Geral", use_container_width=True):
         st.session_state["etapa_fluxo"] = "painel_geral"
         st.rerun()
-
-        
         
