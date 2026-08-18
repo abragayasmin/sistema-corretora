@@ -63,7 +63,7 @@ def get_image_base64(path):
 
 
 @st.cache_data
-def carregar_imagem_padronizada(caminho, largura=320, altura=180):
+def carregar_imagem_padronizada(caminho, largura=400, altura=260):
     if caminho and os.path.exists(caminho):
         img = Image.open(caminho)
         img_proporcional = img.copy()
@@ -137,9 +137,8 @@ else:
 st.markdown(
     f"""
     <style>
-        /* Redução de padding global do Streamlit para encaixar na tela */
         .block-container {{
-            padding-top: 1.5rem !important;
+            padding-top: 1rem !important;
             padding-bottom: 0rem !important;
             padding-left: 2rem !important;
             padding-right: 2rem !important;
@@ -152,14 +151,14 @@ st.markdown(
         
         h1 {{
             margin-bottom: 0.2rem !important;
-            font-size: 2.2rem !important;
+            font-size: 2rem !important;
             color: {text_color} !important;
         }}
 
         h3 {{
-            margin-top: 0.5rem !important;
-            margin-bottom: 0.5rem !important;
-            font-size: 1.3rem !important;
+            margin-top: 0.4rem !important;
+            margin-bottom: 0.4rem !important;
+            font-size: 1.25rem !important;
             color: {text_color} !important;
         }}
 
@@ -186,11 +185,11 @@ st.markdown(
             display: none !important;
         }}
 
-        /* Card Ultra Compacto */
+        /* Card Proporcional */
         .card-imovel {{
             background-color: {card_bg} !important;
             padding: 12px;
-            border-radius: 10px;
+            border-radius: 12px;
             border: {card_border};
             box-shadow: {"0px 2px 6px rgba(0, 0, 0, 0.05)" if not eh_tela_inicial else "none"};
         }}
@@ -360,8 +359,8 @@ elif st.session_state["etapa_fluxo"] == "cadastro_inicial":
 # --- 4. PAINEL GERAL ---
 elif st.session_state["etapa_fluxo"] == "painel_geral":
     st.markdown("<h1>Sua casa a um passo de você</h1>", unsafe_allow_html=True)
-    st.markdown("<p class='subtitulo-cinza' style='font-size: 1rem; font-weight: 500;'>Encontre o lar perfeito para criar as melhores memórias com quem você ama.</p>", unsafe_allow_html=True)
-    st.markdown("<p class='subtitulo-cinza' style='font-size: 0.95rem;'>Bem-vindo ao sistema de gestão imobiliária G&G Imóveis.</p>", unsafe_allow_html=True)
+    st.markdown("<p class='subtitulo-cinza' style='font-size: 0.95rem; font-weight: 500;'>Encontre o lar perfeito para criar as melhores memórias com quem você ama.</p>", unsafe_allow_html=True)
+    st.markdown("<p class='subtitulo-cinza' style='font-size: 0.88rem;'>Bem-vindo ao sistema de gestão imobiliária G&G Imóveis.</p>", unsafe_allow_html=True)
 
     st.markdown("<h3>Oportunidades e Destaques da Semana</h3>", unsafe_allow_html=True)
 
@@ -371,9 +370,9 @@ elif st.session_state["etapa_fluxo"] == "painel_geral":
         st.markdown(
             f"""
             <div class="card-imovel">
-                {"<img src='" + get_image_base64(CAMINHO_BOSQUE) + "' style='width:100%; height:140px; object-fit:cover; border-radius:6px; margin-bottom:8px;' />" if CAMINHO_BOSQUE else ""}
+                {"<img src='" + get_image_base64(CAMINHO_BOSQUE) + "' style='width:100%; height:210px; object-fit:cover; border-radius:8px; margin-bottom:8px;' />" if CAMINHO_BOSQUE else ""}
                 <h4 style="margin-top:0; font-size:1rem;">Residencial Bosque Imperial</h4>
-                <p class='subtitulo-cinza' style='font-size:0.82rem;'><i>Conforto, segurança e área de lazer completa para a família.</i></p>
+                <p class='subtitulo-cinza' style='font-size:0.8rem;'><i>Conforto, segurança e área de lazer completa para a família.</i></p>
                 <p style='color: #0E1D2F !important; font-weight: bold; margin-bottom:0; font-size:0.88rem;'>Valores a partir de R$ 350 mil</p>
             </div>
             """,
@@ -384,9 +383,9 @@ elif st.session_state["etapa_fluxo"] == "painel_geral":
         st.markdown(
             f"""
             <div class="card-imovel">
-                {"<img src='" + get_image_base64(CAMINHO_PALMEIRAS) + "' style='width:100%; height:140px; object-fit:cover; border-radius:6px; margin-bottom:8px;' />" if CAMINHO_PALMEIRAS else ""}
+                {"<img src='" + get_image_base64(CAMINHO_PALMEIRAS) + "' style='width:100%; height:210px; object-fit:cover; border-radius:8px; margin-bottom:8px;' />" if CAMINHO_PALMEIRAS else ""}
                 <h4 style="margin-top:0; font-size:1rem;">Condomínio Jardim das Palmeiras</h4>
-                <p class='subtitulo-cinza' style='font-size:0.82rem;'><i>O lugar ideal para viver seus melhores momentos ao ar livre.</i></p>
+                <p class='subtitulo-cinza' style='font-size:0.8rem;'><i>O lugar ideal para viver seus melhores momentos ao ar livre.</i></p>
                 <p style='color: #0E1D2F !important; font-weight: bold; margin-bottom:0; font-size:0.88rem;'>Valores a partir de R$ 220 mil</p>
             </div>
             """,
@@ -397,16 +396,15 @@ elif st.session_state["etapa_fluxo"] == "painel_geral":
         st.markdown(
             f"""
             <div class="card-imovel">
-                {"<img src='" + get_image_base64(CAMINHO_VISTA) + "' style='width:100%; height:140px; object-fit:cover; border-radius:6px; margin-bottom:8px;' />" if CAMINHO_VISTA else ""}
+                {"<img src='" + get_image_base64(CAMINHO_VISTA) + "' style='width:100%; height:210px; object-fit:cover; border-radius:8px; margin-bottom:8px;' />" if CAMINHO_VISTA else ""}
                 <h4 style="margin-top:0; font-size:1rem;">Residencial Vista Verde</h4>
-                <p class='subtitulo-cinza' style='font-size:0.82rem;'><i>Seu novo lar cercado de tranquilidade e natureza.</i></p>
+                <p class='subtitulo-cinza' style='font-size:0.8rem;'><i>Seu novo lar cercado de tranquilidade e natureza.</i></p>
                 <p style='color: #0E1D2F !important; font-weight: bold; margin-bottom:0; font-size:0.88rem;'>Valores a partir de R$ 185 mil</p>
             </div>
             """,
             unsafe_allow_html=True,
         )
 
-    # Botão alinhado à direita logo abaixo dos cards
     c_vazio1, c_vazio2, c_botao = st.columns([1, 1, 1])
     with c_botao:
         st.write("")
