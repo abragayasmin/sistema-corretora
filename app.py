@@ -174,6 +174,14 @@ st.markdown(
             box-shadow: {"0px 4px 12px rgba(0, 0, 0, 0.05)" if not eh_tela_inicial else "none"};
         }}
 
+        /* Remove o fundo branco e padding de colunas específicas criadas para o botão solto */
+        div[data-testid="stColumn"].coluna-solta > div {{
+            background-color: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0px !important;
+        }}
+
         input {{
             background-color: {"#263345" if eh_tela_inicial else "#FFFFFF"} !important;
             color: {text_color} !important;
@@ -217,6 +225,17 @@ st.markdown(
             color: #FFFFFF !important;
             font-weight: bold !important;
         }}
+
+        /* Container alinhado para o botão no canto direito */
+        .area-botao-solto {{
+            display: flex;
+            justify-content: flex-end;
+            width: 100%;
+            margin-top: 15px;
+        }}
+        .area-botao-solto > div {{
+            width: 31.5%;
+        }}
     </style>
     """,
     unsafe_allow_html=True,
@@ -228,7 +247,6 @@ if not eh_tela_inicial:
 
 # --- 2. TELA INICIAL: LOGIN ---
 if st.session_state["etapa_fluxo"] == "login":
-    # Recarrega os cadastros atualizados do disco sempre que exibe o login
     st.session_state["banco_clientes"] = carregar_clientes_disco()
     
     col1, col2, col3 = st.columns([1, 2, 1])
@@ -330,7 +348,6 @@ elif st.session_state["etapa_fluxo"] == "cadastro_inicial":
                     "renda": 0.0,
                     "senha": senha,
                 }
-                # Salva no arquivo JSON permanente no servidor
                 salvar_cliente_disco(cpf_limpo, novo_cliente)
                 
                 st.success("Cadastro efetuado com sucesso! Faça seu login utilizando seu CPF.")
@@ -377,12 +394,12 @@ elif st.session_state["etapa_fluxo"] == "painel_geral":
         st.markdown("<p class='subtitulo-cinza'><i>Seu novo lar cercado de tranquilidade e natureza.</i></p>", unsafe_allow_html=True)
         st.markdown("<p style='color: #C27803 !important; font-weight: bold;'>Valores a partir de R$ 185 mil</p>", unsafe_allow_html=True)
 
-    st.write("")
-    col_vazia, col_botao = st.columns([2, 1])
-    with col_botao:
-        if st.button("Simule sua entrada", key="btn_simular_geral", use_container_width=True):
-            st.session_state["etapa_fluxo"] = "passo1_cliente"
-            st.rerun()
+    # Botão perfeitamente alinhado à direita e solto no fundo cinza
+    st.markdown('<div class="area-botao-solto"><div>', unsafe_allow_html=True)
+    if st.button("Simule sua entrada", key="btn_simular_geral", use_container_width=True):
+        st.session_state["etapa_fluxo"] = "passo1_cliente"
+        st.rerun()
+    st.markdown('</div></div>', unsafe_allow_html=True)
 
 # --- 5. PASSO 1: COMPLETAR FICHA DO CLIENTE ---
 elif st.session_state["etapa_fluxo"] == "passo1_cliente":
