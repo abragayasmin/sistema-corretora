@@ -360,10 +360,6 @@ elif st.session_state["etapa_fluxo"] == "painel_geral":
         st.markdown("<h4>Residencial Bosque Imperial</h4>", unsafe_allow_html=True)
         st.markdown("<p class='subtitulo-cinza'><i>Conforto, segurança e área de lazer completa para a família.</i></p>", unsafe_allow_html=True)
         st.markdown("<p style='color: #C27803 !important; font-weight: bold;'>Valores a partir de R$ 350 mil</p>", unsafe_allow_html=True)
-        if st.button("Simule sua entrada", key="btn_bosque", use_container_width=True):
-            st.session_state["imovel_selecionado"] = "Residencial Bosque Imperial - R$ 350.000,00"
-            st.session_state["etapa_fluxo"] = "passo1_cliente"
-            st.rerun()
 
     with col_img2:
         img_palmeiras = carregar_imagem_padronizada(CAMINHO_PALMEIRAS)
@@ -372,10 +368,6 @@ elif st.session_state["etapa_fluxo"] == "painel_geral":
         st.markdown("<h4>Condomínio Jardim das Palmeiras</h4>", unsafe_allow_html=True)
         st.markdown("<p class='subtitulo-cinza'><i>O lugar ideal para viver seus melhores momentos ao ar livre.</i></p>", unsafe_allow_html=True)
         st.markdown("<p style='color: #C27803 !important; font-weight: bold;'>Valores a partir de R$ 220 mil</p>", unsafe_allow_html=True)
-        if st.button("Simule sua entrada", key="btn_palmeiras", use_container_width=True):
-            st.session_state["imovel_selecionado"] = "Condomínio Jardim das Palmeiras - R$ 220.000,00"
-            st.session_state["etapa_fluxo"] = "passo1_cliente"
-            st.rerun()
 
     with col_img3:
         img_vista = carregar_imagem_padronizada(CAMINHO_VISTA)
@@ -384,8 +376,11 @@ elif st.session_state["etapa_fluxo"] == "painel_geral":
         st.markdown("<h4>Residencial Vista Verde</h4>", unsafe_allow_html=True)
         st.markdown("<p class='subtitulo-cinza'><i>Seu novo lar cercado de tranquilidade e natureza.</i></p>", unsafe_allow_html=True)
         st.markdown("<p style='color: #C27803 !important; font-weight: bold;'>Valores a partir de R$ 185 mil</p>", unsafe_allow_html=True)
-        if st.button("Simule sua entrada", key="btn_vista", use_container_width=True):
-            st.session_state["imovel_selecionado"] = "Residencial Vista Verde - R$ 185.000,00"
+
+    st.write("")
+    col_vazia, col_botao = st.columns([2, 1])
+    with col_botao:
+        if st.button("Simule sua entrada", key="btn_simular_geral", use_container_width=True):
             st.session_state["etapa_fluxo"] = "passo1_cliente"
             st.rerun()
 
