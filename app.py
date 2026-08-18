@@ -91,30 +91,49 @@ st.set_page_config(
 )
 
 sidebar_bg_base64 = get_image_base64(CAMINHO_SIDEBAR)
-exibir_sidebar = st.session_state["etapa_fluxo"] not in ["login", "cadastro_inicial"]
+eh_tela_inicial = st.session_state["etapa_fluxo"] in ["login", "cadastro_inicial"]
 
-# Estilização CSS em Tema Escuro com ALTO CONTRASTE para legibilidade total
+# Definições de cores dinâmicas baseadas na tela atual
+if eh_tela_inicial:
+    bg_app = "#0E1726"
+    text_color = "#FFFFFF"
+    card_bg = "#1A2638"
+    card_border = "1px solid #2D3748"
+    sub_color = "#A0AEC0"
+    btn_bg = "#2B6CB0"
+    btn_hover = "#3182CE"
+else:
+    # Tema claro / veraneio para o Painel Geral e Simulação
+    bg_app = "#F8F9FA"
+    text_color = "#0E1D2F"
+    card_bg = "#FFFFFF"
+    card_border = "none"
+    sub_color = "#556070"
+    btn_bg = "#0E1D2F"
+    btn_hover = "#1A2E47"
+
+# Estilização CSS Dinâmica
 st.markdown(
     f"""
     <style>
-        /* Fundo Geral Escuro */
+        /* Fundo Principal */
         .stApp {{
-            background-color: #0E1726 !important;
-            color: #FFFFFF !important;
+            background-color: {bg_app} !important;
+            color: {text_color} !important;
         }}
         
-        /* Títulos, Rótulos e Textos em Branco Claro */
-        h1, h2, h3, h4, h5, h6, p, span, label, div {{
-            color: #FFFFFF !important;
+        /* Títulos, Rótulos e Textos */
+        h1, h2, h3, h4, h5, h6, p, span, label {{
+            color: {text_color} !important;
         }}
         
         .subtitulo-cinza {{
-            color: #A0AEC0 !important;
+            color: {sub_color} !important;
         }}
 
-        /* Esconde a barra lateral nas telas de Login e Cadastro */
+        /* Oculta ou Exibe a Barra Lateral */
         [data-testid="stSidebar"] {{
-            display: {"block" if exibir_sidebar else "none"} !important;
+            display: {"none" if eh_tela_inicial else "block"} !important;
             background-image: url("{sidebar_bg_base64}");
             background-size: cover;
             background-position: center;
@@ -123,62 +142,49 @@ st.markdown(
             max-width: 280px !important;
         }}
         
-        /* Oculta botão de recolher sidebar */
         [data-testid="stSidebarCollapseButton"] {{
             display: none !important;
         }}
 
         /* Estilização dos Blocos/Cartões */
         div[data-testid="stColumn"] > div {{
-            background-color: #1A2638 !important;
+            background-color: {card_bg} !important;
             padding: 20px;
             border-radius: 12px;
-            border: 1px solid #2D3748;
+            border: {card_border};
+            box-shadow: {"0px 4px 12px rgba(0, 0, 0, 0.05)" if not eh_tela_inicial else "none"};
         }}
 
-        /* Ajuste de Caixas de Texto (Inputs) */
+        /* Entradas de texto */
         input {{
-            background-color: #263345 !important;
-            color: #FFFFFF !important;
-            border: 1px solid #4A5568 !important;
+            background-color: {"#263345" if eh_tela_inicial else "#FFFFFF"} !important;
+            color: {text_color} !important;
+            border: 1px solid {"#4A5568" if eh_tela_inicial else "#CED4DA"} !important;
             border-radius: 6px !important;
         }}
         
         input::placeholder {{
-            color: #A0AEC0 !important;
+            color: {sub_color} !important;
         }}
 
-        /* Botões com Contraste Perfeito */
-        .stButton>button {{
-            background-color: #2B6CB0 !important;
+        /* Botões */
+        .stButton>button, button[data-testid="stFormSubmitButton"] {{
+            background-color: {btn_bg} !important;
             color: #FFFFFF !important;
             border-radius: 8px !important;
             border: none !important;
             font-weight: 600 !important;
         }}
         
-        .stButton>button:hover {{
-            background-color: #3182CE !important;
-        }}
-        
-        /* Ajuste de Botões dentro de Formulários */
-        button[data-testid="stFormSubmitButton"] {{
-            background-color: #2B6CB0 !important;
-            color: #FFFFFF !important;
-            border-radius: 8px !important;
-            border: none !important;
-            font-weight: 600 !important;
-        }}
-        
-        button[data-testid="stFormSubmitButton"]:hover {{
-            background-color: #3182CE !important;
+        .stButton>button:hover, button[data-testid="stFormSubmitButton"]:hover {{
+            background-color: {btn_hover} !important;
         }}
     </style>
     """,
     unsafe_allow_html=True,
 )
 
-if exibir_sidebar:
+if not eh_tela_inicial:
     with st.sidebar:
         st.empty()
 
@@ -309,7 +315,7 @@ elif st.session_state["etapa_fluxo"] == "painel_geral":
             st.image(img_bosque, use_container_width=True)
         st.markdown("<h4>Residencial Bosque Imperial</h4>", unsafe_allow_html=True)
         st.markdown("<p class='subtitulo-cinza'><i>Conforto, segurança e área de lazer completa para a família.</i></p>", unsafe_allow_html=True)
-        st.markdown("<p style='color: #F6AD55 !important; font-weight: bold;'>Valores a partir de R$ 350 mil</p>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #C27803 !important; font-weight: bold;'>Valores a partir de R$ 350 mil</p>", unsafe_allow_html=True)
         if st.button("Simule sua entrada", key="btn_bosque", use_container_width=True):
             st.session_state["imovel_selecionado"] = "Residencial Bosque Imperial - R$ 350.000,00"
             st.session_state["etapa_fluxo"] = "passo1_cliente"
@@ -321,7 +327,7 @@ elif st.session_state["etapa_fluxo"] == "painel_geral":
             st.image(img_palmeiras, use_container_width=True)
         st.markdown("<h4>Condomínio Jardim das Palmeiras</h4>", unsafe_allow_html=True)
         st.markdown("<p class='subtitulo-cinza'><i>O lugar ideal para viver seus melhores momentos ao ar livre.</i></p>", unsafe_allow_html=True)
-        st.markdown("<p style='color: #F6AD55 !important; font-weight: bold;'>Valores a partir de R$ 220 mil</p>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #C27803 !important; font-weight: bold;'>Valores a partir de R$ 220 mil</p>", unsafe_allow_html=True)
         if st.button("Simule sua entrada", key="btn_palmeiras", use_container_width=True):
             st.session_state["imovel_selecionado"] = "Condomínio Jardim das Palmeiras - R$ 220.000,00"
             st.session_state["etapa_fluxo"] = "passo1_cliente"
@@ -333,7 +339,7 @@ elif st.session_state["etapa_fluxo"] == "painel_geral":
             st.image(img_vista, use_container_width=True)
         st.markdown("<h4>Residencial Vista Verde</h4>", unsafe_allow_html=True)
         st.markdown("<p class='subtitulo-cinza'><i>Seu novo lar cercado de tranquilidade e natureza.</i></p>", unsafe_allow_html=True)
-        st.markdown("<p style='color: #F6AD55 !important; font-weight: bold;'>Valores a partir de R$ 185 mil</p>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #C27803 !important; font-weight: bold;'>Valores a partir de R$ 185 mil</p>", unsafe_allow_html=True)
         if st.button("Simule sua entrada", key="btn_vista", use_container_width=True):
             st.session_state["imovel_selecionado"] = "Residencial Vista Verde - R$ 185.000,00"
             st.session_state["etapa_fluxo"] = "passo1_cliente"
@@ -492,4 +498,5 @@ elif st.session_state["etapa_fluxo"] == "passo3_simulacao":
         st.session_state["etapa_fluxo"] = "painel_geral"
         st.rerun()
 
+        
         
