@@ -164,14 +164,14 @@ st.markdown(
             display: none !important;
         }}
 
-        /* Estilo do Card Branco para os Imóveis */
+        /* Card Compacto no Tamanho Original */
         .card-imovel {{
             background-color: {card_bg} !important;
-            padding: 20px;
-            border-radius: 16px;
+            padding: 16px;
+            border-radius: 12px;
             border: {card_border};
-            box-shadow: {"0px 4px 16px rgba(0, 0, 0, 0.06)" if not eh_tela_inicial else "none"};
-            height: 100%;
+            box-shadow: {"0px 2px 8px rgba(0, 0, 0, 0.05)" if not eh_tela_inicial else "none"};
+            margin-bottom: 10px;
         }}
 
         input {{
@@ -352,14 +352,13 @@ elif st.session_state["etapa_fluxo"] == "painel_geral":
     col_img1, col_img2, col_img3 = st.columns(3)
 
     with col_img1:
-        img_bosque = carregar_imagem_padronizada(CAMINHO_BOSQUE)
         st.markdown(
             f"""
             <div class="card-imovel">
                 {"<img src='" + get_image_base64(CAMINHO_BOSQUE) + "' style='width:100%; border-radius:8px; margin-bottom:12px;' />" if CAMINHO_BOSQUE else ""}
-                <h4 style="margin-top:0;">Residencial Bosque Imperial</h4>
-                <p class='subtitulo-cinza'><i>Conforto, segurança e área de lazer completa para a família.</i></p>
-                <p style='color: #C27803 !important; font-weight: bold; margin-bottom:0;'>Valores a partir de R$ 350 mil</p>
+                <h4 style="margin-top:0; font-size:1.1rem;">Residencial Bosque Imperial</h4>
+                <p class='subtitulo-cinza' style='font-size:0.9rem;'><i>Conforto, segurança e área de lazer completa para a família.</i></p>
+                <p style='color: #0E1D2F !important; font-weight: bold; margin-bottom:0; font-size:0.95rem;'>Valores a partir de R$ 350 mil</p>
             </div>
             """,
             unsafe_allow_html=True,
@@ -370,9 +369,9 @@ elif st.session_state["etapa_fluxo"] == "painel_geral":
             f"""
             <div class="card-imovel">
                 {"<img src='" + get_image_base64(CAMINHO_PALMEIRAS) + "' style='width:100%; border-radius:8px; margin-bottom:12px;' />" if CAMINHO_PALMEIRAS else ""}
-                <h4 style="margin-top:0;">Condomínio Jardim das Palmeiras</h4>
-                <p class='subtitulo-cinza'><i>O lugar ideal para viver seus melhores momentos ao ar livre.</i></p>
-                <p style='color: #C27803 !important; font-weight: bold; margin-bottom:0;'>Valores a partir de R$ 220 mil</p>
+                <h4 style="margin-top:0; font-size:1.1rem;">Condomínio Jardim das Palmeiras</h4>
+                <p class='subtitulo-cinza' style='font-size:0.9rem;'><i>O lugar ideal para viver seus melhores momentos ao ar livre.</i></p>
+                <p style='color: #0E1D2F !important; font-weight: bold; margin-bottom:0; font-size:0.95rem;'>Valores a partir de R$ 220 mil</p>
             </div>
             """,
             unsafe_allow_html=True,
@@ -383,9 +382,9 @@ elif st.session_state["etapa_fluxo"] == "painel_geral":
             f"""
             <div class="card-imovel">
                 {"<img src='" + get_image_base64(CAMINHO_VISTA) + "' style='width:100%; border-radius:8px; margin-bottom:12px;' />" if CAMINHO_VISTA else ""}
-                <h4 style="margin-top:0;">Residencial Vista Verde</h4>
-                <p class='subtitulo-cinza'><i>Seu novo lar cercado de tranquilidade e natureza.</i></p>
-                <p style='color: #C27803 !important; font-weight: bold; margin-bottom:0;'>Valores a partir de R$ 185 mil</p>
+                <h4 style="margin-top:0; font-size:1.1rem;">Residencial Vista Verde</h4>
+                <p class='subtitulo-cinza' style='font-size:0.9rem;'><i>Seu novo lar cercado de tranquilidade e natureza.</i></p>
+                <p style='color: #0E1D2F !important; font-weight: bold; margin-bottom:0; font-size:0.95rem;'>Valores a partir de R$ 185 mil</p>
             </div>
             """,
             unsafe_allow_html=True,
@@ -393,7 +392,6 @@ elif st.session_state["etapa_fluxo"] == "painel_geral":
 
     st.write("")
     
-    # Botão posicionado na direita (3ª coluna) e solto sobre o fundo cinza
     c_vazio1, c_vazio2, c_botao = st.columns(3)
     with c_botao:
         if st.button("Simule sua entrada", key="btn_simular_geral", use_container_width=True):
