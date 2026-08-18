@@ -166,20 +166,13 @@ st.markdown(
             display: none !important;
         }}
 
-        div[data-testid="stColumn"] > div {{
+        /* Aplica o card branco apenas nas colunas do painel principal (imóveis) */
+        .card-imovel > div {{
             background-color: {card_bg} !important;
             padding: 20px;
             border-radius: 12px;
             border: {card_border};
             box-shadow: {"0px 4px 12px rgba(0, 0, 0, 0.05)" if not eh_tela_inicial else "none"};
-        }}
-
-        /* Remove o fundo branco e padding de colunas específicas criadas para o botão solto */
-        div[data-testid="stColumn"].coluna-solta > div {{
-            background-color: transparent !important;
-            border: none !important;
-            box-shadow: none !important;
-            padding: 0px !important;
         }}
 
         input {{
@@ -224,17 +217,6 @@ st.markdown(
         button[data-testid="stFormSubmitButton"] p {{
             color: #FFFFFF !important;
             font-weight: bold !important;
-        }}
-
-        /* Container alinhado para o botão no canto direito */
-        .area-botao-solto {{
-            display: flex;
-            justify-content: flex-end;
-            width: 100%;
-            margin-top: 15px;
-        }}
-        .area-botao-solto > div {{
-            width: 31.5%;
         }}
     </style>
     """,
@@ -371,35 +353,43 @@ elif st.session_state["etapa_fluxo"] == "painel_geral":
     col_img1, col_img2, col_img3 = st.columns(3)
 
     with col_img1:
+        st.markdown('<div class="card-imovel">', unsafe_allow_html=True)
         img_bosque = carregar_imagem_padronizada(CAMINHO_BOSQUE)
         if img_bosque:
             st.image(img_bosque, use_container_width=True)
         st.markdown("<h4>Residencial Bosque Imperial</h4>", unsafe_allow_html=True)
         st.markdown("<p class='subtitulo-cinza'><i>Conforto, segurança e área de lazer completa para a família.</i></p>", unsafe_allow_html=True)
         st.markdown("<p style='color: #C27803 !important; font-weight: bold;'>Valores a partir de R$ 350 mil</p>", unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
 
     with col_img2:
+        st.markdown('<div class="card-imovel">', unsafe_allow_html=True)
         img_palmeiras = carregar_imagem_padronizada(CAMINHO_PALMEIRAS)
         if img_palmeiras:
             st.image(img_palmeiras, use_container_width=True)
         st.markdown("<h4>Condomínio Jardim das Palmeiras</h4>", unsafe_allow_html=True)
         st.markdown("<p class='subtitulo-cinza'><i>O lugar ideal para viver seus melhores momentos ao ar livre.</i></p>", unsafe_allow_html=True)
         st.markdown("<p style='color: #C27803 !important; font-weight: bold;'>Valores a partir de R$ 220 mil</p>", unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
 
     with col_img3:
+        st.markdown('<div class="card-imovel">', unsafe_allow_html=True)
         img_vista = carregar_imagem_padronizada(CAMINHO_VISTA)
         if img_vista:
             st.image(img_vista, use_container_width=True)
         st.markdown("<h4>Residencial Vista Verde</h4>", unsafe_allow_html=True)
         st.markdown("<p class='subtitulo-cinza'><i>Seu novo lar cercado de tranquilidade e natureza.</i></p>", unsafe_allow_html=True)
         st.markdown("<p style='color: #C27803 !important; font-weight: bold;'>Valores a partir de R$ 185 mil</p>", unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
 
-    # Botão perfeitamente alinhado à direita e solto no fundo cinza
-    st.markdown('<div class="area-botao-solto"><div>', unsafe_allow_html=True)
-    if st.button("Simule sua entrada", key="btn_simular_geral", use_container_width=True):
-        st.session_state["etapa_fluxo"] = "passo1_cliente"
-        st.rerun()
-    st.markdown('</div></div>', unsafe_allow_html=True)
+    st.write("")
+    
+    # 3 colunas sem classe 'card-imovel' para o botão ficar solto no fundo cinza e no tamanho exato do card
+    c_vazio1, c_vazio2, c_botao = st.columns(3)
+    with c_botao:
+        if st.button("Simule sua entrada", key="btn_simular_geral", use_container_width=True):
+            st.session_state["etapa_fluxo"] = "passo1_cliente"
+            st.rerun()
 
 # --- 5. PASSO 1: COMPLETAR FICHA DO CLIENTE ---
 elif st.session_state["etapa_fluxo"] == "passo1_cliente":
