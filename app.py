@@ -1,4 +1,5 @@
 import base64
+import json
 import os
 import re
 from PIL import Image
@@ -6,6 +7,7 @@ import streamlit as st
 
 # --- CONFIGURAÇÃO DE CAMINHOS ---
 DIRETORIO_ATUAL = os.path.dirname(os.path.abspath(__file__))
+ARQUIVO_BANCO_CLIENTES = os.path.join(DIRETORIO_ATUAL, "banco_clientes.json")
 
 CAMINHO_LOGO = os.path.join(DIRETORIO_ATUAL, "logo_G&G.png")
 CAMINHO_SIDEBAR = os.path.join(DIRETORIO_ATUAL, "Barra_lateral.png")
@@ -21,6 +23,36 @@ CAMINHO_PALMEIRAS = buscar_imagem("palmeira") or buscar_imagem("jardim")
 CAMINHO_VISTA = buscar_imagem("vista")
 
 LOGO_EXISTE = os.path.exists(CAMINHO_LOGO)
+
+
+# --- PERSISTÊNCIA DE DADOS EM ARQUIVO LOCAL (JSON) ---
+def carregar_clientes_disco():
+    if os.path.exists(ARQUIVO_BANCO_CLIENTES):
+        try:
+            with open(ARQUIVO_BANCO_CLIENTES, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    # Cliente padrão inicial se o arquivo não existir
+    return {
+        "12345678900": {
+            "cpf": "12345678900",
+            "nome": "Cliente Exemplo",
+            "email": "cliente@email.com",
+            "telefone": "(82) 99999-9999",
+            "nascimento": "1990-01-01",
+            "renda": 3000.0,
+            "senha": "Senha@123"
+        }
+    }
+
+def salvar_cliente_disco(cpf, dados_cliente):
+    clientes = carregar_clientes_disco()
+    clientes[cpf] = dados_cliente
+    with open(ARQUIVO_BANCO_CLIENTES, "w", encoding="utf-8") as f:
+        json.dump(clientes, f, ensure_ascii=False, indent=4)
+    # Atualiza a memória da sessão
+    st.session_state["banco_clientes"] = clientes
 
 
 @st.cache_data
@@ -58,19 +90,9 @@ def validar_senha(senha: str) -> bool:
     return tem_maiuscula and tem_especial
 
 
-# --- BANCOS DE DADOS EM MEMÓRIA ---
+# --- BANCOS DE DADOS NA MEMÓRIA E DISCO ---
 if "banco_clientes" not in st.session_state:
-    st.session_state["banco_clientes"] = {
-        "12345678900": {
-            "cpf": "12345678900",
-            "nome": "Cliente Exemplo",
-            "email": "cliente@email.com",
-            "telefone": "(82) 99999-9999",
-            "nascimento": "1990-01-01",
-            "renda": 3000.0,
-            "senha": "Senha@123"
-        }
-    }
+    st.session_state["banco_clientes"] = carregar_clientes_disco()
 
 if "banco_corretores" not in st.session_state:
     st.session_state["banco_corretores"] = {}
@@ -93,7 +115,6 @@ st.set_page_config(
 sidebar_bg_base64 = get_image_base64(CAMINHO_SIDEBAR)
 eh_tela_inicial = st.session_state["etapa_fluxo"] in ["login", "cadastro_inicial"]
 
-# Definições de cores dinâmicas
 if eh_tela_inicial:
     bg_app = "#0E1726"
     text_color = "#FFFFFF"
@@ -105,28 +126,24 @@ if eh_tela_inicial:
     btn_text_color = "#FFFFFF"
     disabled_text_color = "#FFFFFF"
 else:
-    # Tema claro / veraneio para o Painel Geral e Passos
     bg_app = "#F8F9FA"
     text_color = "#0E1D2F"
     card_bg = "#FFFFFF"
     card_border = "none"
     sub_color = "#556070"
-    btn_bg = "#FF9F1C"        # Amarelo/Laranja vibrante Verão
-    btn_hover = "#FF8800"     # Laranja mais intenso
+    btn_bg = "#FF9F1C"
+    btn_hover = "#FF8800"
     btn_text_color = "#FFFFFF"
-    disabled_text_color = "#000000"  # Preto para o campo de CPF bloqueado
+    disabled_text_color = "#000000"
 
-# Estilização CSS Dinâmica
 st.markdown(
     f"""
     <style>
-        /* Fundo Principal */
         .stApp {{
             background-color: {bg_app} !important;
             color: {text_color} !important;
         }}
         
-        /* Títulos, Rótulos e Textos */
         h1, h2, h3, h4, h5, h6, p, span, label {{
             color: {text_color} !important;
         }}
@@ -135,7 +152,6 @@ st.markdown(
             color: {sub_color} !important;
         }}
 
-        /* Ajuste Fino da Barra Lateral */
         [data-testid="stSidebar"] {{
             display: {"none" if eh_tela_inicial else "block"} !important;
             background-image: url("{sidebar_bg_base64}");
@@ -150,7 +166,6 @@ st.markdown(
             display: none !important;
         }}
 
-        /* Estilização dos Blocos/Cartões */
         div[data-testid="stColumn"] > div {{
             background-color: {card_bg} !important;
             padding: 20px;
@@ -159,7 +174,6 @@ st.markdown(
             box-shadow: {"0px 4px 12px rgba(0, 0, 0, 0.05)" if not eh_tela_inicial else "none"};
         }}
 
-        /* Entradas de texto normais */
         input {{
             background-color: {"#263345" if eh_tela_inicial else "#FFFFFF"} !important;
             color: {text_color} !important;
@@ -167,7 +181,6 @@ st.markdown(
             border-radius: 6px !important;
         }}
         
-        /* Correção para Inputs Desabilitados (Ex: Campo de CPF) */
         input:disabled {{
             color: {disabled_text_color} !important;
             -webkit-text-fill-color: {disabled_text_color} !important;
@@ -180,7 +193,6 @@ st.markdown(
             color: {sub_color} !important;
         }}
 
-        /* Todos os Botões (Normais e de Formulário) */
         .stButton>button, 
         button[data-testid="stFormSubmitButton"], 
         div[data-testid="stFormSubmitButton"] > button {{
@@ -201,7 +213,6 @@ st.markdown(
             color: #FFFFFF !important;
         }}
 
-        /* Garante legibilidade do texto do botão do formulário */
         button[data-testid="stFormSubmitButton"] p {{
             color: #FFFFFF !important;
             font-weight: bold !important;
@@ -217,6 +228,9 @@ if not eh_tela_inicial:
 
 # --- 2. TELA INICIAL: LOGIN ---
 if st.session_state["etapa_fluxo"] == "login":
+    # Recarrega os cadastros atualizados do disco sempre que exibe o login
+    st.session_state["banco_clientes"] = carregar_clientes_disco()
+    
     col1, col2, col3 = st.columns([1, 2, 1])
 
     with col2:
@@ -307,7 +321,7 @@ elif st.session_state["etapa_fluxo"] == "cadastro_inicial":
             elif senha != confirmar_senha:
                 st.error("As senhas digitadas não coincidem.")
             else:
-                st.session_state["banco_clientes"][cpf_limpo] = {
+                novo_cliente = {
                     "cpf": cpf_limpo,
                     "nome": nome,
                     "email": email,
@@ -316,6 +330,9 @@ elif st.session_state["etapa_fluxo"] == "cadastro_inicial":
                     "renda": 0.0,
                     "senha": senha,
                 }
+                # Salva no arquivo JSON permanente no servidor
+                salvar_cliente_disco(cpf_limpo, novo_cliente)
+                
                 st.success("Cadastro efetuado com sucesso! Faça seu login utilizando seu CPF.")
                 st.session_state["etapa_fluxo"] = "login"
                 st.rerun()
@@ -406,7 +423,7 @@ elif st.session_state["etapa_fluxo"] == "passo1_cliente":
         if not cpf_salvar or not nome_cli or not email_cli or not tel_cli or renda_cli <= 0:
             st.error("Por favor, preencha todos os campos obrigatórios (incluindo WhatsApp e Renda Mensal).")
         else:
-            st.session_state["banco_clientes"][cpf_salvar] = {
+            dados_atualizados = {
                 "cpf": cpf_salvar,
                 "nome": nome_cli,
                 "email": email_cli,
@@ -415,6 +432,7 @@ elif st.session_state["etapa_fluxo"] == "passo1_cliente":
                 "nascimento": nasc_cli,
                 "senha": dados_atuais.get("senha", "Senha@123")
             }
+            salvar_cliente_disco(cpf_salvar, dados_atualizados)
             st.session_state["etapa_fluxo"] = "passo2_corretor"
             st.rerun()
 
