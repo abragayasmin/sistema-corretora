@@ -103,16 +103,18 @@ if eh_tela_inicial:
     btn_bg = "#2B6CB0"
     btn_hover = "#3182CE"
     btn_text_color = "#FFFFFF"
+    disabled_text_color = "#FFFFFF"
 else:
-    # Tema claro / veraneio para o Painel Geral
+    # Tema claro / veraneio para o Painel Geral e Passos
     bg_app = "#F8F9FA"
     text_color = "#0E1D2F"
     card_bg = "#FFFFFF"
     card_border = "none"
     sub_color = "#556070"
     btn_bg = "#FF9F1C"        # Amarelo/Laranja vibrante Verão
-    btn_hover = "#FF8800"     # Laranja ligeiramente mais escuro no hover
+    btn_hover = "#FF8800"     # Laranja mais intenso
     btn_text_color = "#FFFFFF"
+    disabled_text_color = "#000000"  # Preto para o campo de CPF bloqueado
 
 # Estilização CSS Dinâmica
 st.markdown(
@@ -133,7 +135,7 @@ st.markdown(
             color: {sub_color} !important;
         }}
 
-        /* Ajuste Fino da Barra Lateral para Mostrar a Logo Completa */
+        /* Ajuste Fino da Barra Lateral */
         [data-testid="stSidebar"] {{
             display: {"none" if eh_tela_inicial else "block"} !important;
             background-image: url("{sidebar_bg_base64}");
@@ -157,7 +159,7 @@ st.markdown(
             box-shadow: {"0px 4px 12px rgba(0, 0, 0, 0.05)" if not eh_tela_inicial else "none"};
         }}
 
-        /* Entradas de texto */
+        /* Entradas de texto normais */
         input {{
             background-color: {"#263345" if eh_tela_inicial else "#FFFFFF"} !important;
             color: {text_color} !important;
@@ -165,23 +167,44 @@ st.markdown(
             border-radius: 6px !important;
         }}
         
+        /* Correção para Inputs Desabilitados (Ex: Campo de CPF) */
+        input:disabled {{
+            color: {disabled_text_color} !important;
+            -webkit-text-fill-color: {disabled_text_color} !important;
+            font-weight: 600 !important;
+            opacity: 1 !important;
+            background-color: {"#1A2638" if eh_tela_inicial else "#E9ECEF"} !important;
+        }}
+        
         input::placeholder {{
             color: {sub_color} !important;
         }}
 
-        /* Botões Estilizados */
-        .stButton>button, button[data-testid="stFormSubmitButton"] {{
+        /* Todos os Botões (Normais e de Formulário) */
+        .stButton>button, 
+        button[data-testid="stFormSubmitButton"], 
+        div[data-testid="stFormSubmitButton"] > button {{
             background-color: {btn_bg} !important;
             color: {btn_text_color} !important;
             border-radius: 8px !important;
             border: none !important;
             font-weight: bold !important;
-            font-size: 1rem !important;
+            font-size: 1.05rem !important;
+            opacity: 1 !important;
+            box-shadow: 0px 3px 6px rgba(0,0,0,0.1) !important;
         }}
         
-        .stButton>button:hover, button[data-testid="stFormSubmitButton"]:hover {{
+        .stButton>button:hover, 
+        button[data-testid="stFormSubmitButton"]:hover, 
+        div[data-testid="stFormSubmitButton"] > button:hover {{
             background-color: {btn_hover} !important;
             color: #FFFFFF !important;
+        }}
+
+        /* Garante legibilidade do texto do botão do formulário */
+        button[data-testid="stFormSubmitButton"] p {{
+            color: #FFFFFF !important;
+            font-weight: bold !important;
         }}
     </style>
     """,
