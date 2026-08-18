@@ -63,7 +63,7 @@ def get_image_base64(path):
 
 
 @st.cache_data
-def carregar_imagem_padronizada(caminho, largura=600, altura=400):
+def carregar_imagem_padronizada(caminho, largura=320, altura=180):
     if caminho and os.path.exists(caminho):
         img = Image.open(caminho)
         img_proporcional = img.copy()
@@ -71,7 +71,7 @@ def carregar_imagem_padronizada(caminho, largura=600, altura=400):
         
         w, h = img_proporcional.size
         left = (w - largura) / 2 if w > largura else 0
-        top = (h - altura) / 2 if h > largura else 0
+        top = (h - altura) / 2 if h > altura else 0
         right = (w + largura) / 2 if w > largura else w
         bottom = (h + altura) / 2 if h > altura else h
         
@@ -137,17 +137,39 @@ else:
 st.markdown(
     f"""
     <style>
+        /* Redução de padding global do Streamlit para encaixar na tela */
+        .block-container {{
+            padding-top: 1.5rem !important;
+            padding-bottom: 0rem !important;
+            padding-left: 2rem !important;
+            padding-right: 2rem !important;
+        }}
+
         .stApp {{
             background-color: {bg_app} !important;
             color: {text_color} !important;
         }}
         
-        h1, h2, h3, h4, h5, h6, p, span, label {{
+        h1 {{
+            margin-bottom: 0.2rem !important;
+            font-size: 2.2rem !important;
+            color: {text_color} !important;
+        }}
+
+        h3 {{
+            margin-top: 0.5rem !important;
+            margin-bottom: 0.5rem !important;
+            font-size: 1.3rem !important;
+            color: {text_color} !important;
+        }}
+
+        h2, h4, h5, h6, p, span, label {{
             color: {text_color} !important;
         }}
         
         .subtitulo-cinza {{
             color: {sub_color} !important;
+            margin-bottom: 0.2rem !important;
         }}
 
         [data-testid="stSidebar"] {{
@@ -164,14 +186,13 @@ st.markdown(
             display: none !important;
         }}
 
-        /* Card Compacto no Tamanho Original */
+        /* Card Ultra Compacto */
         .card-imovel {{
             background-color: {card_bg} !important;
-            padding: 16px;
-            border-radius: 12px;
+            padding: 12px;
+            border-radius: 10px;
             border: {card_border};
-            box-shadow: {"0px 2px 8px rgba(0, 0, 0, 0.05)" if not eh_tela_inicial else "none"};
-            margin-bottom: 10px;
+            box-shadow: {"0px 2px 6px rgba(0, 0, 0, 0.05)" if not eh_tela_inicial else "none"};
         }}
 
         input {{
@@ -201,7 +222,8 @@ st.markdown(
             border-radius: 8px !important;
             border: none !important;
             font-weight: bold !important;
-            font-size: 1.05rem !important;
+            font-size: 1rem !important;
+            padding: 8px 16px !important;
             opacity: 1 !important;
             box-shadow: 0px 3px 6px rgba(0,0,0,0.1) !important;
         }}
@@ -242,12 +264,10 @@ if st.session_state["etapa_fluxo"] == "login":
             "<h2 style='text-align: center;'>Acesso ao Sistema</h2>",
             unsafe_allow_html=True,
         )
-        st.write("")
 
         with st.form("form_login"):
             cpf = st.text_input("CPF do Cliente", placeholder="Digite apenas os 11 números do seu CPF")
             senha = st.text_input("Senha", type="password", placeholder="Digite sua senha")
-            st.write("")
 
             btn_col1, btn_col2 = st.columns(2)
             with btn_col1:
@@ -292,7 +312,6 @@ elif st.session_state["etapa_fluxo"] == "cadastro_inicial":
             "<h2 style='text-align: center;'>Cadastro de Novo Cliente</h2>",
             unsafe_allow_html=True,
         )
-        st.write("")
 
         with st.form("form_cadastro"):
             nome = st.text_input("Nome Completo", placeholder="Ex: João da Silva")
@@ -303,7 +322,6 @@ elif st.session_state["etapa_fluxo"] == "cadastro_inicial":
             confirmar_senha = st.text_input("Confirmar Senha", type="password", placeholder="Repita a senha")
 
             st.caption("Requisitos da senha: mínimo de 6 caracteres, 1 caractere especial e 1 letra maiúscula.")
-            st.write("")
             submit_cadastrar = st.form_submit_button("Cadastrar", use_container_width=True)
 
         if submit_cadastrar:
@@ -335,7 +353,6 @@ elif st.session_state["etapa_fluxo"] == "cadastro_inicial":
                 st.session_state["etapa_fluxo"] = "login"
                 st.rerun()
 
-        st.write("")
         if st.button("Voltar para o Login", use_container_width=True):
             st.session_state["etapa_fluxo"] = "login"
             st.rerun()
@@ -343,10 +360,9 @@ elif st.session_state["etapa_fluxo"] == "cadastro_inicial":
 # --- 4. PAINEL GERAL ---
 elif st.session_state["etapa_fluxo"] == "painel_geral":
     st.markdown("<h1>Sua casa a um passo de você</h1>", unsafe_allow_html=True)
-    st.markdown("<p class='subtitulo-cinza' style='font-size: 1.1rem; font-weight: 600;'>Encontre o lar perfeito para criar as melhores memórias com quem você ama.</p>", unsafe_allow_html=True)
-    st.markdown("<p class='subtitulo-cinza'>Bem-vindo ao sistema de gestão imobiliária G&G Imóveis.</p>", unsafe_allow_html=True)
+    st.markdown("<p class='subtitulo-cinza' style='font-size: 1rem; font-weight: 500;'>Encontre o lar perfeito para criar as melhores memórias com quem você ama.</p>", unsafe_allow_html=True)
+    st.markdown("<p class='subtitulo-cinza' style='font-size: 0.95rem;'>Bem-vindo ao sistema de gestão imobiliária G&G Imóveis.</p>", unsafe_allow_html=True)
 
-    st.write("")
     st.markdown("<h3>Oportunidades e Destaques da Semana</h3>", unsafe_allow_html=True)
 
     col_img1, col_img2, col_img3 = st.columns(3)
@@ -355,10 +371,10 @@ elif st.session_state["etapa_fluxo"] == "painel_geral":
         st.markdown(
             f"""
             <div class="card-imovel">
-                {"<img src='" + get_image_base64(CAMINHO_BOSQUE) + "' style='width:100%; border-radius:8px; margin-bottom:12px;' />" if CAMINHO_BOSQUE else ""}
-                <h4 style="margin-top:0; font-size:1.1rem;">Residencial Bosque Imperial</h4>
-                <p class='subtitulo-cinza' style='font-size:0.9rem;'><i>Conforto, segurança e área de lazer completa para a família.</i></p>
-                <p style='color: #0E1D2F !important; font-weight: bold; margin-bottom:0; font-size:0.95rem;'>Valores a partir de R$ 350 mil</p>
+                {"<img src='" + get_image_base64(CAMINHO_BOSQUE) + "' style='width:100%; height:140px; object-fit:cover; border-radius:6px; margin-bottom:8px;' />" if CAMINHO_BOSQUE else ""}
+                <h4 style="margin-top:0; font-size:1rem;">Residencial Bosque Imperial</h4>
+                <p class='subtitulo-cinza' style='font-size:0.82rem;'><i>Conforto, segurança e área de lazer completa para a família.</i></p>
+                <p style='color: #0E1D2F !important; font-weight: bold; margin-bottom:0; font-size:0.88rem;'>Valores a partir de R$ 350 mil</p>
             </div>
             """,
             unsafe_allow_html=True,
@@ -368,10 +384,10 @@ elif st.session_state["etapa_fluxo"] == "painel_geral":
         st.markdown(
             f"""
             <div class="card-imovel">
-                {"<img src='" + get_image_base64(CAMINHO_PALMEIRAS) + "' style='width:100%; border-radius:8px; margin-bottom:12px;' />" if CAMINHO_PALMEIRAS else ""}
-                <h4 style="margin-top:0; font-size:1.1rem;">Condomínio Jardim das Palmeiras</h4>
-                <p class='subtitulo-cinza' style='font-size:0.9rem;'><i>O lugar ideal para viver seus melhores momentos ao ar livre.</i></p>
-                <p style='color: #0E1D2F !important; font-weight: bold; margin-bottom:0; font-size:0.95rem;'>Valores a partir de R$ 220 mil</p>
+                {"<img src='" + get_image_base64(CAMINHO_PALMEIRAS) + "' style='width:100%; height:140px; object-fit:cover; border-radius:6px; margin-bottom:8px;' />" if CAMINHO_PALMEIRAS else ""}
+                <h4 style="margin-top:0; font-size:1rem;">Condomínio Jardim das Palmeiras</h4>
+                <p class='subtitulo-cinza' style='font-size:0.82rem;'><i>O lugar ideal para viver seus melhores momentos ao ar livre.</i></p>
+                <p style='color: #0E1D2F !important; font-weight: bold; margin-bottom:0; font-size:0.88rem;'>Valores a partir de R$ 220 mil</p>
             </div>
             """,
             unsafe_allow_html=True,
@@ -381,19 +397,19 @@ elif st.session_state["etapa_fluxo"] == "painel_geral":
         st.markdown(
             f"""
             <div class="card-imovel">
-                {"<img src='" + get_image_base64(CAMINHO_VISTA) + "' style='width:100%; border-radius:8px; margin-bottom:12px;' />" if CAMINHO_VISTA else ""}
-                <h4 style="margin-top:0; font-size:1.1rem;">Residencial Vista Verde</h4>
-                <p class='subtitulo-cinza' style='font-size:0.9rem;'><i>Seu novo lar cercado de tranquilidade e natureza.</i></p>
-                <p style='color: #0E1D2F !important; font-weight: bold; margin-bottom:0; font-size:0.95rem;'>Valores a partir de R$ 185 mil</p>
+                {"<img src='" + get_image_base64(CAMINHO_VISTA) + "' style='width:100%; height:140px; object-fit:cover; border-radius:6px; margin-bottom:8px;' />" if CAMINHO_VISTA else ""}
+                <h4 style="margin-top:0; font-size:1rem;">Residencial Vista Verde</h4>
+                <p class='subtitulo-cinza' style='font-size:0.82rem;'><i>Seu novo lar cercado de tranquilidade e natureza.</i></p>
+                <p style='color: #0E1D2F !important; font-weight: bold; margin-bottom:0; font-size:0.88rem;'>Valores a partir de R$ 185 mil</p>
             </div>
             """,
             unsafe_allow_html=True,
         )
 
-    st.write("")
-    
-    c_vazio1, c_vazio2, c_botao = st.columns(3)
+    # Botão alinhado à direita logo abaixo dos cards
+    c_vazio1, c_vazio2, c_botao = st.columns([1, 1, 1])
     with c_botao:
+        st.write("")
         if st.button("Simule sua entrada", key="btn_simular_geral", use_container_width=True):
             st.session_state["etapa_fluxo"] = "passo1_cliente"
             st.rerun()
@@ -547,7 +563,6 @@ elif st.session_state["etapa_fluxo"] == "passo3_simulacao":
             st.info(f"**Subsídio Concedido ({pct_subsidio * 100:.0f}%):** R$ {valor_subsidio:,.2f}")
             st.success(f"**Saldo Final a Financiar:** R$ {saldo_devedor_exibir:,.2f}")
 
-    st.write("")
     if st.button("← Voltar ao Painel Geral", use_container_width=True):
         st.session_state["etapa_fluxo"] = "painel_geral"
         st.rerun()
